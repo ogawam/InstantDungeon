@@ -8,7 +8,9 @@ public class UnitMasterData {
 
 	[SerializeField] string _unitName;
 	public string UnitName { get { return _unitName; } }
+
 	[SerializeField] string _viewName;
 	public string ViewName { get { return _viewName; } }
+
 	[SerializeField] StatusData _status;
 }
