@@ -7,6 +7,7 @@ public class UnitController : MonoBehaviour {
 	public UnitMasterData UnitMasterData { get { return _unitMasterData; } }
 	UnitActiveData _unitActiveData = null;
 	UnitView _unitView = null;
+	public UnitView UnitView { get { return _unitView; } }
 
 	public int x;
 	public int z;

@@ -12,7 +12,9 @@ public class StageManager : Utility.Singleton<StageManager> {
 	UnitController[,] _units = new UnitController[Define.StageWidth, Define.StageDepth];
 
 	public UnitController FindUnit(ChipController chip) {
-		return _units [chip.x, chip.z];
+		if(chip != null)
+			return _units [chip.x, chip.z];
+		return null;
 	}
 
 	Dictionary<UnitController, ChipController> _unitsTo = new Dictionary<UnitController, ChipController>();
@@ -29,6 +31,12 @@ public class StageManager : Utility.Singleton<StageManager> {
 		unit.x = x;
 		unit.z = z;
 		_units[x, z] = unit;
+	}
+
+	public ChipController GetChip(int x, int z) {
+		if (x >= 0 && x < Define.StageWidth && z >= 0 && z < Define.StageDepth)
+			return _chips [x, z];
+		return null;
 	}
 
 	public void UnitTo(UnitController unit, ChipController chip) {

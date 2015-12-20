@@ -60,4 +60,6 @@ static public class Define {
 	static public readonly float ChipDepth = 80;
 	static public readonly int StageWidth = 8;
 	static public readonly int StageDepth = 8;
+
+	static public readonly float DragToMove = 80;
 }
