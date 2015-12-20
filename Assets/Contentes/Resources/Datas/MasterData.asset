@@ -15,9 +15,22 @@ MonoBehaviour:
   - _unitName: Hero
     _viewName: HeroUnitView
     _status:
-      hp: 80
-      mp: 80
-      str: 60
-      def: 20
-      agi: 10
-      lck: 5
+      _hp: 0
+      _mp: 0
+      _str: 0
+      _def: 0
+      _agi: 0
+      _lck: 0
+  - _unitName: Wall
+    _viewName: WallUnitView
+    _status:
+      _hp: 0
+      _mp: 0
+      _str: 0
+      _def: 0
+      _agi: 0
+      _lck: 0
+  _chipData:
+  - _chipName: Flat
+    _viewName: FlatChipView
+    _moveCost: 1

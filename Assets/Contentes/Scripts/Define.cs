@@ -24,6 +24,13 @@ static public class Define {
 		Tail, 
 	};
 
+	public enum Direction {
+		Up,
+		Down,
+		Left,
+		Right,
+	};
+
 	public enum Race {
 		Anknown,
 		Human,
@@ -49,6 +56,8 @@ static public class Define {
 		Enemy,
 	};
 
+	static public readonly float ChipWidth = 80;
+	static public readonly float ChipDepth = 80;
 	static public readonly int StageWidth = 8;
 	static public readonly int StageDepth = 8;
 }

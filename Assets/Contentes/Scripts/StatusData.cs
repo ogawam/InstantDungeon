@@ -5,12 +5,14 @@ using System.Collections.Generic;
 [System.Serializable]
 public class StatusData {
 
-	[SerializeField] int hp;
-	[SerializeField] int mp;
-	[SerializeField] int str;
-	[SerializeField] int def;
-	[SerializeField] int agi;
-	[SerializeField] int lck;
+	[SerializeField] int _hp;
+	public int Hp { get { return _hp; } }
+	[SerializeField] int _mp;
+	[SerializeField] int _str;
+	[SerializeField] int _def;
+	[SerializeField] int _agi;
+	public int Agi { get { return _agi; } }
+	[SerializeField] int _lck;
 
-	[SerializeField] List<ConditionData> conditions;
+	[SerializeField] List<ConditionData> _conditions;
 }

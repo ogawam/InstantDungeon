@@ -13,4 +13,5 @@ public class UnitMasterData {
 	public string ViewName { get { return _viewName; } }
 
 	[SerializeField] StatusData _status;
+	public StatusData Status { get { return _status; } }
 }
