@@ -1,13 +1,18 @@
 ﻿using UnityEngine;
 using UnityEngine.UI;
 using System.Collections;
+using System.Collections.Generic;
 using DG.Tweening;
 
 public class UnitView : MonoBehaviour {
 
+	List<UnitRegionView> regions = new List<UnitRegionView> ();
+	CanvasGroup _canvasGroup = null;
+
 	// Use this for initialization
 	void Start () {
-		
+		_canvasGroup = GetComponent<CanvasGroup> ();
+		regions.AddRange(GetComponentsInChildren<UnitRegionView> ());
 	}
 	
 	// Update is called once per frame
@@ -22,6 +27,14 @@ public class UnitView : MonoBehaviour {
 		}
 */
 }
+
+	public void Damage(bool isDead) {
+		foreach (Rigidbody2D child in GetComponentsInChildren<Rigidbody2D> ())
+			child.AddTorque (100000);
+		if (isDead) {
+			_canvasGroup.DOFade (0, 2);
+		}
+	}
 
 	public void MoveTo(ChipView chipTo) {
 		transform.DOLocalJump(chipTo.transform.localPosition, 40, 1, 0.5f);

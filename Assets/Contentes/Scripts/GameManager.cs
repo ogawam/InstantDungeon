@@ -10,7 +10,7 @@ public class GameManager : Utility.Singleton<GameManager> {
 	GameObject _unitRoot = null;
 
 	UnitController _heroUnit = null;
-
+	List<UnitController> _monsterUnits = new List<UnitController>();
 
 	public void Click(ChipController chip) {
 /*
@@ -23,7 +23,6 @@ public class GameManager : Utility.Singleton<GameManager> {
 		}
 */		
 	}
-
 
 	Define.Direction _dragDirection = Define.Direction.Up;
 	float _dragRate = 0;
@@ -60,12 +59,49 @@ public class GameManager : Utility.Singleton<GameManager> {
 
 			ChipController chip = sm.GetChip (x, z);
 			UnitController unit = sm.FindUnit (chip);
-			if (chip != null && unit == null || unit.UnitMasterData.Status.Agi > 0) {
+
+			if (chip != null && (unit == null || unit.UnitMasterData.Status.Agi > 0)) {
 				sm.UnitTo (_heroUnit, chip);
+
+				foreach (UnitController monsterUnit in _monsterUnits) {
+					if (monsterUnit.UnitActiveData.Status.IsDead)
+						continue;
+					
+					x = monsterUnit.x;
+					z = monsterUnit.z;
+
+					int xDiff = _heroUnit.x - monsterUnit.x;
+					int zDiff = _heroUnit.z - monsterUnit.z;
+					if (Mathf.Abs (xDiff) > Mathf.Abs (zDiff)) {
+						if (xDiff > 0)
+							x++;
+						else x--;
+					} else {
+						if (zDiff > 0)
+							z++;
+						else z--;
+					}
+							
+					sm.UnitTo (monsterUnit, sm.GetChip (x, z));
+				}
+
 				sm.CalcTo ();
 				sm.ExecTo ();
 			}
 		}
+	}
+
+	// todo refactaling
+	public void Attack(UnitController offence, UnitController defence) {
+		int attackPoint = offence.UnitActiveData.GetAttackPoint ();
+		int defencePoint = defence.UnitActiveData.GetDefencePoint ();
+
+		defence.UnitActiveData.RecieveDamage (Mathf.Max(1, attackPoint - defencePoint));
+		if (defence.UnitActiveData.Status.IsDead) {
+			StageManager.Instance.RemoveUnit (defence);
+//			defence.UnitView.gameObject.SetActive(false);
+		}
+		defence.Reaction ();	// view
 	}
 
 	// Use this for initialization
@@ -89,6 +125,20 @@ public class GameManager : Utility.Singleton<GameManager> {
 		unitController.Setup (unitMaster);
 		_heroUnit = unitController;
 		StageManager.Instance.SetUnit(0, 0, unitController);
+
+		unitMaster = master.FindUnitData ("Slime");
+		unitController = new GameObject(unitMaster.UnitName).AddComponent<UnitController>();
+		unitController.transform.SetParent(_unitRoot.transform);
+		unitController.Setup (unitMaster);
+		StageManager.Instance.SetUnit (2, 2, unitController);
+		_monsterUnits.Add (unitController);
+
+		unitMaster = master.FindUnitData ("Slime");
+		unitController = new GameObject(unitMaster.UnitName).AddComponent<UnitController>();
+		unitController.transform.SetParent(_unitRoot.transform);
+		unitController.Setup (unitMaster);
+		StageManager.Instance.SetUnit (0, 4, unitController);
+		_monsterUnits.Add (unitController);
 
 		unitMaster = master.FindUnitData ("Wall");
 		unitController = new GameObject(unitMaster.UnitName).AddComponent<UnitController>();
@@ -119,7 +169,9 @@ public class GameManager : Utility.Singleton<GameManager> {
 	
 	// Update is called once per frame
 	void Update () {
+#if !UNITY_EDITOR
 		Vector2 gravity2D = new Vector2(Input.acceleration.x, Input.acceleration.y).normalized;
 		Physics2D.gravity = gravity2D * Physics2D.gravity.magnitude;
+#endif
 	}
 }

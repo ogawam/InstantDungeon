@@ -17,6 +17,11 @@ public class StageManager : Utility.Singleton<StageManager> {
 		return null;
 	}
 
+	public void RemoveUnit(UnitController unit) {
+		if (unit == _units [unit.x, unit.z])
+			_units [unit.x, unit.z] = null;
+	}
+
 	Dictionary<UnitController, ChipController> _unitsTo = new Dictionary<UnitController, ChipController>();
 
 	public void SetChip(int x, int z, ChipController chip) {
@@ -46,6 +51,9 @@ public class StageManager : Utility.Singleton<StageManager> {
 	public void CalcTo() {
 		UnitController[] orderedUnits = _unitsTo.Keys.OrderBy (elem => -elem.UnitMasterData.Status.Agi).ToArray();
 		foreach(UnitController unit in orderedUnits) {
+			if (unit.UnitActiveData.Status.IsDead)
+				continue;
+			
 			_units [unit.x, unit.z] = null;
 			ChipController chip = _unitsTo [unit];
 			UnitController rideUnit = _units [chip.x, chip.z];
@@ -55,6 +63,8 @@ public class StageManager : Utility.Singleton<StageManager> {
 			if (rideUnit != null) {
 				x = unit.x;
 				z = unit.z;
+
+				GameManager.Instance.Attack (unit, rideUnit);
 			} 
 			// move to chip
 			else {
@@ -62,6 +72,7 @@ public class StageManager : Utility.Singleton<StageManager> {
 			if (unit.x != x || unit.z != z) {
 				unit.x = x;
 				unit.z = z;
+				// todo on ExecTo
 				unit.MoveTo (chip);
 			}
 			_units [x, z] = unit;
