@@ -26,4 +26,14 @@ public class UnitActiveData {
 	public void RecieveDamage(int damage) {
 		_status.Damage (damage);
 	}
+
+	public int ActionPoint { 
+		get { 
+			if (_status.Agi < GameManager.Instance.Master.AgiOnceToTwice)
+				return 5;
+			else if (_status.Agi < GameManager.Instance.Master.AgiTwiceAtTime)
+				return 10;
+			return 20;
+		}
+	}
 }

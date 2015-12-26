@@ -22,7 +22,8 @@ public class StatusData {
 			_hp = 0;
 	}
 
-	public bool IsDead { get { return _hp == 0; } }
+	public bool IsLive { get { return _hp > 0; } }
+	public bool IsDead { get { return !IsLive; } }
 
 	[SerializeField] List<ConditionData> _conditions;
 	public void Copy(StatusData status) {

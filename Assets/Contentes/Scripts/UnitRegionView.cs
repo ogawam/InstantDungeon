@@ -12,7 +12,7 @@ public class UnitRegionView : MonoBehaviour {
 	void Awake() {
 		image = GetComponent<Image> ();
 		Vector2 pivot = new Vector2 (image.sprite.pivot.x / image.sprite.rect.width, image.sprite.pivot.y / image.sprite.rect.height);
-		Debug.Log ("pivot x " + pivot.x + " y " + pivot.y);
+//		Debug.Log ("pivot x " + pivot.x + " y " + pivot.y);
 	//	((RectTransform)transform).pivot = pivot;
 	}
 

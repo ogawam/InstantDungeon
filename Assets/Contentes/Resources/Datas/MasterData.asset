@@ -43,3 +43,8 @@ MonoBehaviour:
   - _chipName: Flat
     _viewName: FlatChipView
     _moveCost: 1
+  - _chipName: Stairs
+    _viewName: StairsChipView
+    _moveCost: 1
+  _agiOnceToTwice: 5
+  _agiTwiceAtTime: 10

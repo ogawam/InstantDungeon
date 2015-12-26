@@ -5,7 +5,8 @@ using System.Linq;
 
 public class StageManager : Utility.Singleton<StageManager> {
 
-	[SerializeField] RectTransform _stageRoot;
+	[SerializeField] RectTransform _backGround;
+	[SerializeField] RectTransform _foreGround;
 
 	Vector3[,] _positions = new Vector3[Define.StageWidth, Define.StageDepth];
 	ChipController[,] _chips = new ChipController[Define.StageWidth, Define.StageDepth];
@@ -22,25 +23,59 @@ public class StageManager : Utility.Singleton<StageManager> {
 			_units [unit.x, unit.z] = null;
 	}
 
+	public void Clear() {
+		for(int x = 0; x < Define.StageWidth; ++x) {
+			for(int z = 0; z < Define.StageDepth; ++z) {
+				if(_chips[x,z] != null) 
+					_chips [x, z].Remove();
+				_chips [x, z] = null;
+				_units [x, z] = null;
+			}
+		}
+	}
+
 	Dictionary<UnitController, ChipController> _unitsTo = new Dictionary<UnitController, ChipController>();
 
-	public void SetChip(int x, int z, ChipController chip) {
-		chip.CreateView (_stageRoot, _positions [x,z]);
-		chip.x = x;
-		chip.z = z;
+	public void SetChip(ChipController chip) {
+		int x = chip.x;
+		int z = chip.z;
+		Vector3 position = _positions [x, z];
+		chip.ChipView.transform.SetParent (_backGround, false);
+		chip.ChipView.transform.localPosition = position;
+		for (int i = 0; i < _backGround.childCount; ++i) {
+			if (position.y > _backGround.GetChild (i).transform.localPosition.y) {
+				chip.ChipView.transform.SetSiblingIndex (i);
+				break;
+			}
+		}								
 		_chips[x, z] = chip;
 	}
 
-	public void SetUnit(int x, int z, UnitController unit) {
-		unit.CreateView (_stageRoot, _positions[x,z]);
-		unit.x = x;
-		unit.z = z;
+	public void SetUnit(UnitController unit) {
+		int x = unit.x;
+		int z = unit.z;
+		Vector3 position = _positions [x, z];
+		unit.UnitView.Stop ();
+		unit.UnitView.transform.SetParent (_foreGround, false);
+		unit.UnitView.transform.localPosition = position;
+		for (int i = 0; i < _foreGround.childCount; ++i) {
+			if (position.y > _foreGround.GetChild (i).transform.localPosition.y) {
+				unit.UnitView.transform.SetSiblingIndex (i);
+				break;
+			}
+		}								
 		_units[x, z] = unit;
 	}
 
 	public ChipController GetChip(int x, int z) {
 		if (x >= 0 && x < Define.StageWidth && z >= 0 && z < Define.StageDepth)
 			return _chips [x, z];
+		return null;
+	}
+
+	public UnitController GetUnit(int x, int z) {
+		if (x >= 0 && x < Define.StageWidth && z >= 0 && z < Define.StageDepth)
+			return _units [x, z];
 		return null;
 	}
 
@@ -64,7 +99,9 @@ public class StageManager : Utility.Singleton<StageManager> {
 				x = unit.x;
 				z = unit.z;
 
-				GameManager.Instance.Attack (unit, rideUnit);
+				if (rideUnit.IsRecievable && unit.Side != rideUnit.Side) {
+					GameManager.Instance.Attack (unit, rideUnit);
+				}
 			} 
 			// move to chip
 			else {
@@ -75,6 +112,7 @@ public class StageManager : Utility.Singleton<StageManager> {
 				// todo on ExecTo
 				unit.MoveTo (chip);
 			}
+			unit.Action ();
 			_units [x, z] = unit;
 		}
 		_unitsTo.Clear ();
@@ -104,7 +142,7 @@ public class StageManager : Utility.Singleton<StageManager> {
 	// Update is called once per frame
 	void Update () {
 		if (sort) {
-			RectTransform[] children = _stageRoot.GetComponentsInChildren<RectTransform> ();
+			RectTransform[] children = _foreGround.GetComponentsInChildren<RectTransform> ();
 			RectTransform[] ordered = children.OrderBy (elem => -elem.localPosition.y).ToArray ();
 			for (int i = 0; i < ordered.Length; ++i) {
 				ordered [i].SetSiblingIndex (i);

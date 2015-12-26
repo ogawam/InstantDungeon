@@ -28,6 +28,10 @@ public class UnitView : MonoBehaviour {
 */
 }
 
+	public void Stop() {
+		transform.DOKill ();
+	}
+
 	public void Damage(bool isDead) {
 		foreach (Rigidbody2D child in GetComponentsInChildren<Rigidbody2D> ())
 			child.AddTorque (100000);

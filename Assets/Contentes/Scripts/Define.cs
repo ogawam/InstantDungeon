@@ -52,8 +52,28 @@ static public class Define {
 	};
 
 	public enum Side {
+		Neutral,
 		Party,
 		Enemy,
+	};
+
+	public enum Unit {
+		Hero,
+		Wall,
+		Monster,
+		Treasure
+	};
+
+	public enum Chip {
+		Flat,
+		Sand,
+		Flad,
+		Hole,
+		Move,
+		Damage,
+		Poison,
+		Frozen,
+		Stairs,
 	};
 
 	static public readonly float ChipWidth = 80;

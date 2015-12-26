@@ -13,4 +13,9 @@ public class MasterData : ScriptableObject {
 	public ChipData FindChipData(string name) {
 		return _chipData.First (chip => chip.ChipName == name);
 	}
+
+	[SerializeField] int _agiOnceToTwice;
+	public int AgiOnceToTwice { get { return _agiOnceToTwice; } }
+	[SerializeField] int _agiTwiceAtTime;
+	public int AgiTwiceAtTime { get { return _agiTwiceAtTime; } }
 }

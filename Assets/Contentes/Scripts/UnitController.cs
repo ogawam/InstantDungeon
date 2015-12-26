@@ -11,36 +11,61 @@ public class UnitController : MonoBehaviour {
 	public UnitView UnitView { get { return _unitView; } }
 	HudView _hudView = null;
 
+	Define.Unit _unitType;
+	public Define.Unit UnitType { get { return _unitType; } }
+	public bool IsRecievable { get { 
+		return _unitType != Define.Unit.Wall; // or brake by pickaxe
+	} }
+
+	Define.Side _side;
+	public Define.Side Side { get { return _side; } }
+
+	private int _actionPoint = 0;
+	public int ActionPoint { get { return _actionPoint; } } 
+	public bool IsEnableAction { get { return UnitActiveData.Status.IsLive && _actionPoint >= 10; } }
+
 	public int x;
 	public int z;
 
-	public void Setup(UnitMasterData unitMasterData) {
+	public void Setup(UnitMasterData unitMasterData, Define.Unit unitType, Define.Side side) {
+		_side = side;
+		_unitType = unitType;
 		Setup (unitMasterData, new UnitActiveData(unitMasterData));
 	}
 		
 	public void Setup(UnitMasterData unitMasterData, UnitActiveData unitActiveData) {
 		_unitMasterData = unitMasterData;
 		_unitActiveData = unitActiveData;
-	}
 
-	public void CreateView(Transform parent, Vector3 position) {
+		MasterData master = GameManager.Instance.Master;
 		string viewPath = "Prefabs/" + _unitMasterData.ViewName;
-		Debug.Log ("Load "+ viewPath);
+//		Debug.Log ("Load "+ viewPath);
 		_unitView = Instantiate(Resources.Load<UnitView>(viewPath));
-		_unitView.transform.SetParent (parent, false);
-		_unitView.transform.localPosition = position;
-		if (_unitMasterData.Status.Agi > 0) {
+		if (IsRecievable) {
 			_hudView = InterfaceManager.Instance.CreateHudView (_unitActiveData.Status.Hp);
-			_hudView.transform.localPosition = position + Vector3.up * 80;
+			ResetTurn ();
 		}
 	}
 
 	public void Action() {
+		_actionPoint -= 10;
+	}
+
+	public void NextTurn() {
+		if(_unitActiveData.Status.IsLive)
+			_actionPoint += _unitActiveData.ActionPoint;
+		Debug.Log ("action point "+ _actionPoint);
+	}
+
+	public void ResetTurn() {
+		_actionPoint = _unitActiveData.ActionPoint;
 	}
 
 	public void Reaction() {
+		if (_unitActiveData.Status.IsDead)
+			_actionPoint = 0;
 		_hudView.SetHeartPoint (_unitActiveData.Status.Hp);
-		_unitView.Damage (_unitActiveData.Status.Hp == 0);
+		_unitView.Damage (_unitActiveData.Status.IsDead);
 	}
 
 	public void MoveTo(ChipController chipTo) {
@@ -56,5 +81,11 @@ public class UnitController : MonoBehaviour {
 	void Update () {
 		if(_hudView != null)
 			_hudView.transform.localPosition = _unitView.transform.localPosition + Vector3.up * 80;
+	}
+
+	public void Remove() {
+		Destroy (_unitView.gameObject);
+		if(_hudView != null) Destroy (_hudView.gameObject);
+		Destroy (gameObject);
 	}
 }
