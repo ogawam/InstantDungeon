@@ -6,6 +6,8 @@ using System.Linq;
 
 public class GameManager : Utility.Singleton<GameManager> {
 
+	[SerializeField] string[] _monsterNames;
+
 	GameObject _chipRoot = null;
 	GameObject _unitRoot = null;
 
@@ -236,7 +238,7 @@ public class GameManager : Utility.Singleton<GameManager> {
 				_objectUnits.Add (unitController);
 				break;
 			case Define.Unit.Monster:
-				unitController = CreateUnit ("Slime", unitType, Define.Side.Enemy);
+				unitController = CreateUnit (_monsterNames [Random.Range (0, _monsterNames.Count ())], unitType, Define.Side.Enemy);
 				unitController.ResetTurn ();
 				_monsterUnits.Add (unitController);
 				break;
@@ -279,6 +281,7 @@ public class GameManager : Utility.Singleton<GameManager> {
 	void Start () {
 		
 		_master = Resources.Load<MasterData> ("Datas/MasterData");
+
 		_chipRoot = new GameObject ("ChipRoot");
 		_chipRoot.transform.SetParent (transform);
 

@@ -1,0 +1,27 @@
+﻿using UnityEngine;
+using System.Collections;
+using System.Collections.Generic;
+using System.Linq;
+
+[System.Serializable]
+public class UserDataItem {
+	string _name;
+	int _count;
+};
+	
+[System.Serializable]
+public class UserData {
+
+	[SerializeField] List<UserDataItem> _depotItems = new List<UserDataItem> ();
+
+	[SerializeField] List<string> _holdItems = new List<string>();
+
+	[SerializeField] List<string> _libraryItems = new List<string> ();
+
+	[SerializeField] int hoge = 10;
+
+	public UserData() {
+		_holdItems.Add ("BlonzArmor");
+		_holdItems.Add ("BlonzHelm");
+	}
+}

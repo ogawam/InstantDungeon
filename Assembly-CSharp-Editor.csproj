@@ -46,6 +46,7 @@
   </ItemGroup>
   <ItemGroup>
      <Compile Include="Assets\Contentes\Scripts\Editor\ScriptableObjectToAsset.cs" />
+     <Compile Include="Assets\Contentes\Scripts\Editor\UserManagerInspector.cs" />
      <None Include="Assets\DOTween\DOTween43.xml" />
      <None Include="Assets\DOTween\DOTween50.xml" />
      <None Include="Assets\DOTween\readme.txt" />

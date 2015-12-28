@@ -1,6 +1,6 @@
 fileFormatVersion: 2
-guid: 52bce1067f55e4731a6ab931fff26f07
-timeCreated: 1450328533
+guid: dc1acac6fc9924be394a4f6e11893925
+timeCreated: 1450823057
 licenseType: Free
 TextureImporter:
   fileIDToRecycleName: {}
@@ -29,7 +29,7 @@ TextureImporter:
   textureFormat: -2
   maxTextureSize: 2048
   textureSettings:
-    filterMode: 1
+    filterMode: -1
     aniso: 16
     mipBias: -1
     wrapMode: 1
@@ -41,8 +41,8 @@ TextureImporter:
   spriteMode: 1
   spriteExtrude: 1
   spriteMeshType: 1
-  alignment: 9
-  spritePivot: {x: 0.5268776, y: 0.8625731}
+  alignment: 0
+  spritePivot: {x: 0.5, y: 0.5}
   spriteBorder: {x: 0, y: 0, z: 0, w: 0}
   spritePixelsToUnits: 100
   alphaIsTransparency: 1
@@ -51,7 +51,7 @@ TextureImporter:
   spriteSheet:
     sprites: []
     outline: []
-  spritePackingTag: hero
+  spritePackingTag: stage
   userData: 
   assetBundleName: 
   assetBundleVariant: 
