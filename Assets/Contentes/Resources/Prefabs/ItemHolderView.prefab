@@ -63,6 +63,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ac76737b6c3b842cbbb2ad2cd220b14a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  _scaleRate: 1.2
+  _scaleSec: 0.25
   _itemImage: {fileID: 11467614}
   _equipImage: {fileID: 11487772}
 --- !u!114 &11419410
@@ -223,7 +225,15 @@ Prefab:
   serializedVersion: 2
   m_Modification:
     m_TransformParent: {fileID: 0}
-    m_Modifications: []
+    m_Modifications:
+    - target: {fileID: 0}
+      propertyPath: _scaleRate
+      value: 1.2
+      objectReference: {fileID: 0}
+    - target: {fileID: 0}
+      propertyPath: _scaleSec
+      value: 0.25
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_ParentPrefab: {fileID: 0}
   m_RootGameObject: {fileID: 103674}

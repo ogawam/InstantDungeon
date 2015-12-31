@@ -4,6 +4,20 @@ using System.Collections;
 using System.Collections.Generic;
 using DG.Tweening;
 
+[System.Serializable]
+public class EquipInterfaceData {
+	[SerializeField] Define.Region _region;
+	public bool IsRegion (Define.Region region) {
+		return _region == region;
+	}
+
+	[SerializeField] Sprite _iconSprite;
+	public Sprite IconSprite { get { return _iconSprite; } }
+
+	[SerializeField] bool _isFlip;
+	public bool IsFlip { get { return _isFlip; } }
+};
+
 public class InterfaceManager : Utility.Singleton<InterfaceManager> {
 
 	[SerializeField] RectTransform _interfaceRoot;
@@ -12,6 +26,8 @@ public class InterfaceManager : Utility.Singleton<InterfaceManager> {
 	[SerializeField] float _skipRotateSec;
 	[SerializeField] Text _floorText;
 	[SerializeField] HorizontalLayoutGroup _itemGroup;
+
+	[SerializeField] List<EquipInterfaceData> _equipDatas; 
 
 	private int _selectItemHolderIndex = -1;
 	public int SelectItemHolderIndex { get { return _selectItemHolderIndex; } }
@@ -53,7 +69,11 @@ public class InterfaceManager : Utility.Singleton<InterfaceManager> {
 	}
 
 	public void SetHolderItem(int index, ItemMasterData item) {
-		_itemHolders [index].SetItem (item != null ? item.ViewSprite: null);
+		if (item != null) {
+			EquipInterfaceData data = _equipDatas.Find (elem => elem.IsRegion (item.EquipRegion));
+			_itemHolders [index].SetItem (item.ViewSprite, data.IconSprite, data.IsFlip);
+		}
+		else _itemHolders [index].SetItem (null, null, false);
 	}
 
 	public void ClickItemHolder(ItemHolderView view) {
@@ -65,8 +85,13 @@ public class InterfaceManager : Utility.Singleton<InterfaceManager> {
 				return;
 			}
 		} 
-		view.SetSelect (true);
+		if(view != null)
+			view.SetSelect (true);
 		_selectItemHolderIndex = selectItemHolderIndex;
+	}
+
+	public void SetEquip(int index, bool isEquip) {
+		_itemHolders [index].SetEquip (isEquip);
 	}
 
 	void Awake() {

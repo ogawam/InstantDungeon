@@ -29,9 +29,17 @@ public class GameManager : Utility.Singleton<GameManager> {
 			return;
 
 		ItemMasterData itemMasterData = _holdItems [selectItemHolderIndex];
-		_heroUnit.Equip (itemMasterData.EquipRegion, itemMasterData);
+		if (itemMasterData != null) {
+			if (itemMasterData.EquipRegion != Define.Region.None
+				&& StageManager.Instance.GetUnit(chip.x, chip.z) == _heroUnit) 
+			{
+				_heroUnit.Equip (itemMasterData.EquipRegion, itemMasterData);
+				InterfaceManager.Instance.SetEquip (selectItemHolderIndex, true);
+				Action (_heroUnit.x, _heroUnit.z);
+			}
+		}
 
-		Action (_heroUnit.x, _heroUnit.z);
+		InterfaceManager.Instance.ClickItemHolder (null);
 	}
 
 	Define.Direction _dragDirection = Define.Direction.Up;
