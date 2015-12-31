@@ -15,6 +15,9 @@ public class MasterData : ScriptableObject {
 	}
 
 	[SerializeField] ItemMasterData[] _itemMasterData;
+	public ItemMasterData FindItemData(string name) {
+		return _itemMasterData.First (item => item.ItemName == name);
+	}
 
 	[SerializeField] int _agiOnceToTwice;
 	public int AgiOnceToTwice { get { return _agiOnceToTwice; } }

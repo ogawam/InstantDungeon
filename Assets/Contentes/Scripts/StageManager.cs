@@ -8,6 +8,8 @@ public class StageManager : Utility.Singleton<StageManager> {
 	[SerializeField] RectTransform _backGround;
 	[SerializeField] RectTransform _foreGround;
 
+	[SerializeField] List<Define.Chip> _chipPriority;
+
 	Vector3[,] _positions = new Vector3[Define.StageWidth, Define.StageDepth];
 	ChipController[,] _chips = new ChipController[Define.StageWidth, Define.StageDepth];
 	UnitController[,] _units = new UnitController[Define.StageWidth, Define.StageDepth];
@@ -43,7 +45,8 @@ public class StageManager : Utility.Singleton<StageManager> {
 		chip.ChipView.transform.SetParent (_backGround, false);
 		chip.ChipView.transform.localPosition = position;
 		for (int i = 0; i < _backGround.childCount; ++i) {
-			if (position.y > _backGround.GetChild (i).transform.localPosition.y) {
+			ChipController childChip = _backGround.GetChild (i).GetComponent<ChipController> ();
+			if (childChip != null && _chipPriority.IndexOf(chip.ChipType) > _chipPriority.IndexOf(childChip.ChipType)) {
 				chip.ChipView.transform.SetSiblingIndex (i);
 				break;
 			}
@@ -138,15 +141,7 @@ public class StageManager : Utility.Singleton<StageManager> {
 	void Start () {
 	}
 
-	public bool sort = true;
 	// Update is called once per frame
 	void Update () {
-		if (sort) {
-			RectTransform[] children = _foreGround.GetComponentsInChildren<RectTransform> ();
-			RectTransform[] ordered = children.OrderBy (elem => -elem.localPosition.y).ToArray ();
-			for (int i = 0; i < ordered.Length; ++i) {
-				ordered [i].SetSiblingIndex (i);
-			}
-		}
 	}
 }

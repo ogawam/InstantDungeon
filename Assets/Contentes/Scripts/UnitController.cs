@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using System.Collections;
+using System.Collections.Generic;
 
 public class UnitController : MonoBehaviour {
 
@@ -19,6 +20,8 @@ public class UnitController : MonoBehaviour {
 
 	Define.Side _side;
 	public Define.Side Side { get { return _side; } }
+
+	Dictionary<Define.Region, ItemMasterData> _equipItems = new Dictionary<Define.Region, ItemMasterData>();
 
 	private int _actionPoint = 0;
 	public int ActionPoint { get { return _actionPoint; } } 
@@ -45,6 +48,14 @@ public class UnitController : MonoBehaviour {
 			_hudView = InterfaceManager.Instance.CreateHudView (_unitActiveData.Status.Hp);
 			ResetTurn ();
 		}
+	}
+
+	public void Equip(Define.Region region, ItemMasterData itemData) {
+		if (_equipItems.ContainsKey (region)) {
+			// reject item 
+		}
+		_equipItems[region] = itemData;
+		_unitView.EquipItem (region, itemData != null ? itemData.ViewSprite : null);
 	}
 
 	public void Action() {

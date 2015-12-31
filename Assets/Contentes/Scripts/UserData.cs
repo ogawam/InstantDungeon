@@ -18,10 +18,6 @@ public class UserData {
 
 	[SerializeField] List<string> _libraryItems = new List<string> ();
 
-	[SerializeField] int hoge = 10;
-
 	public UserData() {
-		_holdItems.Add ("BlonzArmor");
-		_holdItems.Add ("BlonzHelm");
 	}
 }

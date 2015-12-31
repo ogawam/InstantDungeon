@@ -2,41 +2,44 @@
 using UnityEngine.UI;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using DG.Tweening;
 
 public class UnitView : MonoBehaviour {
 
-	List<UnitRegionView> regions = new List<UnitRegionView> ();
+	List<UnitRegionView> _regions = new List<UnitRegionView> ();
 	CanvasGroup _canvasGroup = null;
+
+	void Awake() {
+		_canvasGroup = GetComponent<CanvasGroup> ();
+		_regions.AddRange(GetComponentsInChildren<UnitRegionView> ());
+	}
 
 	// Use this for initialization
 	void Start () {
-		_canvasGroup = GetComponent<CanvasGroup> ();
-		regions.AddRange(GetComponentsInChildren<UnitRegionView> ());
 	}
 	
 	// Update is called once per frame
 	void Update () {
-/*		
-		if (Input.anyKeyDown) {
-			transform.DOLocalMove (Vector2.left * 80, 0.5f).SetRelative ();
-			foreach (Rigidbody2D rigid2D in transform.GetComponentsInChildren<Rigidbody2D> ()) {
-			//	rigid2D.AddTorque (1000000);
-				Debug.Log (rigid2D.name);
-			}
-		}
-*/
-}
+	}
 
 	public void Stop() {
 		transform.DOKill ();
 	}
 
 	public void Damage(bool isDead) {
-		foreach (Rigidbody2D child in GetComponentsInChildren<Rigidbody2D> ())
-			child.AddTorque (100000);
+		foreach(UnitRegionView region in _regions)
+			if(region.RigidBody2D != null)
+				region.RigidBody2D.AddTorque (100000);
 		if (isDead) {
 			_canvasGroup.DOFade (0, 2);
+		}
+	}
+
+	public void EquipItem(Define.Region region, Sprite sprite) {
+		UnitRegionView view = _regions.FirstOrDefault (elem => elem.Type == region);
+		if (view != null) {
+			view.Equip (sprite);
 		}
 	}
 

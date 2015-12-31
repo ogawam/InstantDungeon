@@ -15,6 +15,7 @@ static public class Define {
 	};
 
 	public enum Region {
+		None = -1,
 		Body,
 		Head,
 		RArm,
@@ -82,5 +83,5 @@ static public class Define {
 	static public readonly int StageDepth = 8;
 
 	static public readonly float DragToMove = 80;
-	static public readonly int ItemHoldMax = 8;
+	static public readonly int ItemHolderMax = 8;
 }

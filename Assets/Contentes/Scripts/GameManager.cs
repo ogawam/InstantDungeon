@@ -15,23 +15,23 @@ public class GameManager : Utility.Singleton<GameManager> {
 	public MasterData Master { get { return _master; } }
 
 	int _floorNo = 0;
-
 	int _turn = 1;
+
+	ItemMasterData[] _holdItems = new ItemMasterData[Define.ItemHolderMax]; 
 
 	UnitController _heroUnit = null;
 	List<UnitController> _monsterUnits = new List<UnitController>();
 	List<UnitController> _objectUnits  = new List<UnitController>();
 
 	public void Click(ChipController chip) {
-/*
-		StageManager sm = StageManager.Instance;
-		UnitController unit = sm.FindUnit (chip);
-		if (unit == null) {
-			sm.UnitTo (_heroUnit, chip);
-			sm.CalcTo ();
-			sm.ExecTo ();
-		}
-*/		
+		int selectItemHolderIndex = InterfaceManager.Instance.SelectItemHolderIndex;
+		if (selectItemHolderIndex < 0)
+			return;
+
+		ItemMasterData itemMasterData = _holdItems [selectItemHolderIndex];
+		_heroUnit.Equip (itemMasterData.EquipRegion, itemMasterData);
+
+		Action (_heroUnit.x, _heroUnit.z);
 	}
 
 	Define.Direction _dragDirection = Define.Direction.Up;
@@ -182,6 +182,13 @@ public class GameManager : Utility.Singleton<GameManager> {
 		blankChips.Remove (stairsPos);
 		blankUnits.Remove (stairsPos);	// can't set on stair
 
+		for (int i = 0; i < Random.Range (0, 64); ++i) {
+			int sandLot = Random.Range (0, blankChips.Count);
+			int sandPos = blankChips[sandLot];
+			entryChips.Add(sandPos, Define.Chip.Sand);
+			blankChips.Remove (sandPos);
+		}
+
 		int heroLot = Random.Range(0, blankChips.Count);
 		int heroPos = blankChips[heroLot];
 		entryUnits.Add (heroPos, Define.Unit.Hero);
@@ -221,6 +228,8 @@ public class GameManager : Utility.Singleton<GameManager> {
 			chipController.z = z;
 			StageManager.Instance.SetChip (chipController);
 		}	
+		ChipController stairChip = StageManager.Instance.GetChip (stairsPos % 100, stairsPos / 100);
+		stairChip.ChipView.transform.SetSiblingIndex (stairChip.ChipView.transform.parent.childCount);
 
 		foreach (int posKey in entryUnits.Keys) {
 			Define.Unit unitType = entryUnits [posKey];
@@ -231,6 +240,8 @@ public class GameManager : Utility.Singleton<GameManager> {
 			switch (unitType) {
 			case Define.Unit.Hero:
 				unitController = _heroUnit;
+//				unitController.UnitView.EquipItem (Define.Region.Head, Random.value < 0.5f ? _master.FindItemData("BronzeHelm").ViewSprite: null);
+//				unitController.UnitView.EquipItem (Define.Region.Body, Random.value < 0.5f ? _master.FindItemData("BronzeArmor").ViewSprite: null);
 				unitController.ResetTurn ();
 				break;
 			case Define.Unit.Wall:
@@ -239,6 +250,8 @@ public class GameManager : Utility.Singleton<GameManager> {
 				break;
 			case Define.Unit.Monster:
 				unitController = CreateUnit (_monsterNames [Random.Range (0, _monsterNames.Count ())], unitType, Define.Side.Enemy);
+				if(Random.value < 0.25f) unitController.UnitView.EquipItem (Define.Region.Head, _master.FindItemData("BronzeHelm").ViewSprite);
+				if(Random.value < 0.25f) unitController.UnitView.EquipItem (Define.Region.Body, _master.FindItemData("BronzeArmor").ViewSprite);
 				unitController.ResetTurn ();
 				_monsterUnits.Add (unitController);
 				break;
@@ -289,6 +302,11 @@ public class GameManager : Utility.Singleton<GameManager> {
 		_unitRoot.transform.SetParent (transform);
 
 		_heroUnit = CreateUnit("Hero", Define.Unit.Hero, Define.Side.Party);
+
+		_holdItems [0] = _master.FindItemData ("BronzeHelm");
+		_holdItems [4] = _master.FindItemData ("BronzeArmor");
+		for(int i = 0; i < _holdItems.Length; ++i)
+			InterfaceManager.Instance.SetHolderItem(i, _holdItems[i]);
 
 		CreateMap (1);
 		StartCoroutine(CheckAction ());

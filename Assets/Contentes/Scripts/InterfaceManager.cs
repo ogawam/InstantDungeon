@@ -1,6 +1,7 @@
 ﻿using UnityEngine;
 using UnityEngine.UI;
 using System.Collections;
+using System.Collections.Generic;
 using DG.Tweening;
 
 public class InterfaceManager : Utility.Singleton<InterfaceManager> {
@@ -10,6 +11,12 @@ public class InterfaceManager : Utility.Singleton<InterfaceManager> {
 	[SerializeField] Image _skipButton; 
 	[SerializeField] float _skipRotateSec;
 	[SerializeField] Text _floorText;
+	[SerializeField] HorizontalLayoutGroup _itemGroup;
+
+	private int _selectItemHolderIndex = -1;
+	public int SelectItemHolderIndex { get { return _selectItemHolderIndex; } }
+
+	List<ItemHolderView> _itemHolders = new List<ItemHolderView>();
 	public ArrowCanvasView ArrowView { get { return _arrowView; } }
 
 	public HudView CreateHudView(int hpMax) {
@@ -45,13 +52,35 @@ public class InterfaceManager : Utility.Singleton<InterfaceManager> {
 			.Append(_floorText.DOFade(0, _floorFadeOutSec));
 	}
 
+	public void SetHolderItem(int index, ItemMasterData item) {
+		_itemHolders [index].SetItem (item != null ? item.ViewSprite: null);
+	}
+
+	public void ClickItemHolder(ItemHolderView view) {
+		int selectItemHolderIndex = _itemHolders.IndexOf (view);
+		if (_selectItemHolderIndex >= 0) {
+			_itemHolders [_selectItemHolderIndex].SetSelect (false);
+			if (_selectItemHolderIndex == selectItemHolderIndex) {
+				_selectItemHolderIndex = -1;
+				return;
+			}
+		} 
+		view.SetSelect (true);
+		_selectItemHolderIndex = selectItemHolderIndex;
+	}
+
 	void Awake() {
 		_floorText.enabled = false;
+		for (int i = 0; i < Define.ItemHolderMax; ++i) {
+			ItemHolderView view = Instantiate<ItemHolderView> (Resources.Load<ItemHolderView> ("Prefabs/ItemHolderView"));
+			view.transform.SetParent(_itemGroup.transform);
+			view.Setup (ClickItemHolder);
+			_itemHolders.Add (view);
+		}
 	}
 
 	// Use this for initialization
 	void Start () {
-		
 	}
 	
 	// Update is called once per frame

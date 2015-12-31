@@ -7,12 +7,15 @@ using System.Collections.Generic;
 [System.Serializable]
 public class ItemMasterData {
 
-	[SerializeField] string _unitName;
-	public string UnitName { get { return _unitName; } }
+	[SerializeField] string _itemName;
+	public string ItemName { get { return _itemName; } }
 
 	[SerializeField] Sprite _viewSprite;
 	public Sprite ViewSprite { get { return _viewSprite; } }
 
 	[SerializeField] StatusData _status;
 	public StatusData Status { get { return _status; } }
+
+	[SerializeField] Define.Region _equipRegion;
+	public Define.Region EquipRegion { get { return _equipRegion; } }
 }
