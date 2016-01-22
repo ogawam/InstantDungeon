@@ -8,6 +8,12 @@ public class GameManager : Utility.Singleton<GameManager> {
 
 	[SerializeField] string[] _monsterNames;
 
+	enum CheckResult {
+		PlayerInput,
+		EnemyAction,
+		AdvanceTurn,
+	};
+
 	GameObject _chipRoot = null;
 	GameObject _unitRoot = null;
 
@@ -86,8 +92,7 @@ public class GameManager : Utility.Singleton<GameManager> {
 
 		if (chip != null && (unit == null || unit.IsRecievable)) {
 			sm.UnitTo (_heroUnit, chip);
-			ProgressAction ();
-			StartCoroutine (CheckAction ());
+			StartCoroutine(ProgressAction ());
 		}
 	}
 
@@ -99,7 +104,7 @@ public class GameManager : Utility.Singleton<GameManager> {
 		}
 	}
 		
-	public void ProgressAction() {
+	public IEnumerator ProgressAction() {
 		StageManager sm = StageManager.Instance;
 		foreach (UnitController monsterUnit in _monsterUnits) {
 			if (!monsterUnit.IsEnableAction)
@@ -135,9 +140,23 @@ public class GameManager : Utility.Singleton<GameManager> {
 		}
 
 		sm.CalcTo ();
-		sm.ExecTo ();
+		_heroUnit.CalcEnd ();
+		foreach(UnitController monsterUnit in _monsterUnits)
+			monsterUnit.CalcEnd ();
+		yield return StartCoroutine(sm.ExecTo ());
 		if (sm.GetChip (_heroUnit.x, _heroUnit.z).ChipType == Define.Chip.Stairs) {
 			CreateMap (_floorNo + 1);
+		}
+
+		switch (Check ()) {
+		case CheckResult.PlayerInput:
+			break;
+		case CheckResult.EnemyAction:
+			yield return StartCoroutine (ProgressAction());
+			break;
+		case CheckResult.AdvanceTurn:
+			ProgressTurn ();
+			break;
 		}
 	}
 
@@ -147,16 +166,12 @@ public class GameManager : Utility.Singleton<GameManager> {
 	}
 
 	// todo refactaling
-	public void Attack(UnitController offence, UnitController defence) {
-		int attackPoint = offence.UnitActiveData.GetAttackPoint ();
-		int defencePoint = defence.UnitActiveData.GetDefencePoint ();
+	public void Action(UnitController sender, List<UnitController> receivers) {
+		sender.CalcCommandResult(receivers, _master.FindCommandData("Attack"));
+	}
 
-		defence.UnitActiveData.RecieveDamage (Mathf.Max(1, attackPoint - defencePoint));
-		if (defence.UnitActiveData.Status.IsDead) {
-			StageManager.Instance.RemoveUnit (defence);
-//			defence.UnitView.gameObject.SetActive(false);
-		}
-		defence.Reaction ();	// view
+	public void Open(UnitController targetUnit, UnitController actionUnit) {
+				
 	}
 		
 	void CreateMap(int floorNo) {
@@ -212,7 +227,7 @@ public class GameManager : Utility.Singleton<GameManager> {
 			blankUnits.Remove (wallPos);
 		}
 
-		int monsterNum = Random.Range (5, 10);	// todo stage data
+		int monsterNum = 1;//Random.Range (5, 10);	// todo stage data
 		for (int i = 0; i < monsterNum; ++i) {
 			int monsterLot = Random.Range (0, blankUnits.Count);
 			int monsterPos = blankUnits[monsterLot];
@@ -279,23 +294,13 @@ public class GameManager : Utility.Singleton<GameManager> {
 		return result;
 	}
 
-	private IEnumerator CheckAction() {
-		if (_heroUnit.IsEnableAction) {
-			yield break;	// wait for input
-		}
-		bool isAction = false;
-		foreach (UnitController monsterUnit in _monsterUnits) {
-			if (monsterUnit.IsEnableAction) {
-				isAction = true;
-				break;
-			}
-		}
-		if(isAction)
-			ProgressAction ();
-		else ProgressTurn ();
-		yield return 0;
-
-		yield return StartCoroutine(CheckAction ());
+	private CheckResult Check() {
+		if (_heroUnit.IsEnableAction)
+			return CheckResult.PlayerInput;
+		foreach (UnitController monsterUnit in _monsterUnits)
+			if (monsterUnit.IsEnableAction)
+				return CheckResult.EnemyAction;
+		return CheckResult.AdvanceTurn;
 	}
 
 	// Use this for initialization
@@ -317,7 +322,17 @@ public class GameManager : Utility.Singleton<GameManager> {
 			InterfaceManager.Instance.SetHolderItem(i, _holdItems[i]);
 
 		CreateMap (1);
-		StartCoroutine(CheckAction ());
+
+		switch (Check ()) {
+		case CheckResult.PlayerInput:
+			break;
+		case CheckResult.EnemyAction:
+			StartCoroutine (ProgressAction());
+			break;
+		case CheckResult.AdvanceTurn:
+			ProgressTurn ();
+			break;
+		}
 	}
 	
 	// Update is called once per frame
@@ -331,9 +346,9 @@ public class GameManager : Utility.Singleton<GameManager> {
 	void OnGUI() {
 		#if UNITY_EDITOR
 		GUILayout.Label ("turn "+ _turn);
-		GUILayout.Label (_heroUnit.name + " ap " + _heroUnit.ActionPoint);
+		GUILayout.Label (_heroUnit.name + " ap " + _heroUnit.UnitActiveData.BaseStatus.ap);
 		foreach (UnitController monsterUnit in _monsterUnits)
-			GUILayout.Label (monsterUnit.name + " ap "+ monsterUnit.ActionPoint);
+			GUILayout.Label (monsterUnit.name + " ap "+ monsterUnit.UnitActiveData.BaseStatus.ap);
 		#endif
 	}
 }

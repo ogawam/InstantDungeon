@@ -30,7 +30,7 @@ public class UnitView : MonoBehaviour {
 	public void Damage(bool isDead) {
 		foreach(UnitRegionView region in _regions)
 			if(region.RigidBody2D != null)
-				region.RigidBody2D.AddTorque (100000);
+				region.RigidBody2D.AddTorque (1000000);
 		if (isDead) {
 			_canvasGroup.DOFade (0, 2);
 		}

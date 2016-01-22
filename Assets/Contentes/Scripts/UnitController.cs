@@ -23,12 +23,18 @@ public class UnitController : MonoBehaviour {
 
 	Dictionary<Define.Region, ItemMasterData> _equipItems = new Dictionary<Define.Region, ItemMasterData>();
 
-	private int _actionPoint = 0;
-	public int ActionPoint { get { return _actionPoint; } } 
-	public bool IsEnableAction { get { return UnitActiveData.Status.IsLive && _actionPoint >= 10; } }
+	public bool IsEnableAction { 
+		get { return UnitActiveData.BaseStatus.IsLive && UnitActiveData.BaseStatus.ap >= 10; } 
+	}
 
-	public int x;
-	public int z;
+	public int x { 
+		get { return UnitActiveData.CalcStatus.x; } 
+		set { UnitActiveData.BaseStatus.x = UnitActiveData.CalcStatus.x = value; } 
+	}
+	public int z { 
+		get { return UnitActiveData.CalcStatus.z; } 
+		set { UnitActiveData.BaseStatus.z = UnitActiveData.CalcStatus.z = value; } 
+	}
 
 	public void Setup(UnitMasterData unitMasterData, Define.Unit unitType, Define.Side side) {
 		_side = side;
@@ -45,7 +51,7 @@ public class UnitController : MonoBehaviour {
 //		Debug.Log ("Load "+ viewPath);
 		_unitView = Instantiate(Resources.Load<UnitView>(viewPath));
 		if (IsRecievable) {
-			_hudView = InterfaceManager.Instance.CreateHudView (_unitActiveData.Status.Hp);
+			_hudView = InterfaceManager.Instance.CreateHudView (_unitActiveData.BaseStatus.Hp);
 			ResetTurn ();
 		}
 	}
@@ -58,27 +64,71 @@ public class UnitController : MonoBehaviour {
 		_unitView.EquipItem (region, itemData != null ? itemData.ViewSprite : null);
 	}
 
-	public void Action() {
-		_actionPoint -= 10;
+	public void CalcCommandResult(ChipController chip, CommandData command) {
+		_commandResultData = new CommandResultData () { 
+			sender = this, 
+			chip = chip, 
+			moveStatus = new StatusData (UnitActiveData.CalcStatus)
+		};
+
+		_commandResultData.moveStatus.x = chip.x;
+		_commandResultData.moveStatus.z = chip.z;
+		UnitActiveData.CalcStatus = _commandResultData.moveStatus;
+	}
+
+	// todo refactaling
+	public void CalcCommandResult(List<UnitController> receivers, CommandData command) {
+		_commandResultData = new CommandResultData () { sender = this };
+		foreach(UnitController receiver in receivers)
+			_commandResultData.recievers[receiver] = UnitActiveData.CalcCommandResult(receiver.UnitActiveData, command);
+	/*
+		if (defence.UnitActiveData.Status.IsDead) {
+			StageManager.Instance.RemoveUnit (defence);
+			if (Random.value < 0.1f) {
+				UnitController unitController = CreateUnit ("Treasure", Define.Unit.Treasure, Define.Side.Party);
+				unitController.transform.SetParent (_unitRoot.transform);
+				unitController.x = defence.x;
+				unitController.z = defence.z;
+				_objectUnits.Add (unitController);
+				StageManager.Instance.SetUnit (unitController);
+			}
+			//			defence.UnitView.gameObject.SetActive(false);
+		}
+	*/
+	}
+
+	public void CalcEnd() {
+		UnitActiveData.CalcStatus.ap -= 10;
+		UnitActiveData.NextStatus = UnitActiveData.CalcStatus;
+		UnitActiveData.CalcStatus = UnitActiveData.EquipStatus;
+	}
+
+	public void ExecEnd() {
+		UnitActiveData.Update ();
+		_commandResultData = null;
 	}
 
 	public void NextTurn() {
-		if(_unitActiveData.Status.IsLive)
-			_actionPoint += _unitActiveData.ActionPoint;
-		Debug.Log ("action point "+ _actionPoint);
+		if (_unitActiveData.NextStatus.IsLive) {
+			_unitActiveData.NextStatus.ap += _unitActiveData.ActionPointBonus;
+		}
+		UnitActiveData.Update ();
+//		Debug.Log ("action point "+ _actionPoint);
 	}
 
 	public void ResetTurn() {
-		_actionPoint = _unitActiveData.ActionPoint;
+		_unitActiveData.NextStatus.ap = _unitActiveData.ActionPointBonus;
+		UnitActiveData.Update ();
 	}
 
 	public void Reaction() {
-		if (_unitActiveData.Status.IsDead)
-			_actionPoint = 0;
-		_hudView.SetHeartPoint (_unitActiveData.Status.Hp);
-		_unitView.Damage (_unitActiveData.Status.IsDead);
+		_hudView.SetHeartPoint (_unitActiveData.CalcStatus.Hp);
+		_unitView.Damage (_unitActiveData.CalcStatus.IsDead);
 	}
 
+	CommandResultData _commandResultData = null;
+	public CommandResultData CommandResult { get { return _commandResultData; } }
+		
 	public void MoveTo(ChipController chipTo) {
 		_unitView.MoveTo (chipTo.ChipView);
 	}

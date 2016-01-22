@@ -4,14 +4,23 @@ using System.Collections;
 static public class Define {
 
 	public enum Element {
-		None,
-		Holy,
-		Fire,
-		Wind,
-		Water,
-		Earth,
-		Thunder,
-		Ice,
+		Holy = (1<<0),
+		Fire = (1<<1),
+		Wind = (1<<2),
+		Water = (1<<3),
+		Earth = (1<<4),
+		Thunder = (1<<5),
+		Ice = (1<<6),
+	};
+
+	public enum Nature {
+		Physical,
+		Magical,
+	};
+
+	public enum Method {
+		Addition,
+		Multiply,
 	};
 
 	public enum Region {
@@ -21,7 +30,6 @@ static public class Define {
 		RArm,
 		LArm,
 		RLeg,
-		LLeg,
 		Tail, 
 	};
 
@@ -43,13 +51,15 @@ static public class Define {
 	};
 
 	public enum Condition {
-		None,
-		Poison,
-		Stun,
-		Sleep,
-		Stone,
-		Confuse,
-		Dead,
+		Poison = (1 << 0),
+		Stun = (1 << 1),
+		Sleep = (1 << 2),
+		Stone = (1 << 3),
+		Confuse = (1 << 4),
+		Dead = (1 << 5),
+		BadConditions = Poison | Stun | Sleep | Stone | Confuse,
+
+		Shield = (1 << 6),
 	};
 
 	public enum Side {
@@ -75,6 +85,17 @@ static public class Define {
 		Poison,
 		Frozen,
 		Stairs,
+	};
+
+	public enum Ability {
+		Hp,
+		Mp,
+		HpMax,
+		MpMax,
+		Str,
+		Def,
+		Agi,
+		Lck
 	};
 
 	static public readonly float ChipWidth = 80;

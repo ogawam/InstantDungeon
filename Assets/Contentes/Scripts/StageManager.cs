@@ -71,13 +71,15 @@ public class StageManager : Utility.Singleton<StageManager> {
 	}
 
 	public ChipController GetChip(int x, int z) {
-		if (x >= 0 && x < Define.StageWidth && z >= 0 && z < Define.StageDepth)
+		if (x >= 0 && x < Define.StageWidth && 
+			z >= 0 && z < Define.StageDepth)
 			return _chips [x, z];
 		return null;
 	}
 
 	public UnitController GetUnit(int x, int z) {
-		if (x >= 0 && x < Define.StageWidth && z >= 0 && z < Define.StageDepth)
+		if (x >= 0 && x < Define.StageWidth && 
+			z >= 0 && z < Define.StageDepth)
 			return _units [x, z];
 		return null;
 	}
@@ -86,10 +88,12 @@ public class StageManager : Utility.Singleton<StageManager> {
 		_unitsTo.Add (unit, chip);
 	}
 
+	List<UnitController> _orderedUnits = new List<UnitController>();
 	public void CalcTo() {
-		UnitController[] orderedUnits = _unitsTo.Keys.OrderBy (elem => -elem.UnitMasterData.Status.Agi).ToArray();
-		foreach(UnitController unit in orderedUnits) {
-			if (unit.UnitActiveData.Status.IsDead)
+		_orderedUnits.Clear ();
+		_orderedUnits.AddRange(_unitsTo.Keys.OrderBy (elem => -elem.UnitMasterData.Status.Agi).ToArray());
+		foreach(UnitController unit in _orderedUnits) {
+			if (unit.UnitActiveData.CalcStatus.IsDead)
 				continue;
 			
 			_units [unit.x, unit.z] = null;
@@ -102,27 +106,61 @@ public class StageManager : Utility.Singleton<StageManager> {
 				x = unit.x;
 				z = unit.z;
 
-				if (rideUnit.IsRecievable && unit.Side != rideUnit.Side) {
-					GameManager.Instance.Attack (unit, rideUnit);
+				switch (rideUnit.UnitType) {
+				case Define.Unit.Treasure:
+					// TODO enable open enemy thief
+					if (unit.UnitType == Define.Unit.Hero) {
+						GameManager.Instance.Open (rideUnit, unit);
+					}
+					break;
+				case Define.Unit.Hero:
+				case Define.Unit.Monster:
+					if (rideUnit.IsRecievable && unit.Side != rideUnit.Side)
+						GameManager.Instance.Action (unit, new List<UnitController>(){ rideUnit });
+					break;
 				}
 			} 
-			// move to chip
-			else {
+			else if (unit.x != x || unit.z != z) {
+				unit.CalcCommandResult (chip, null);	// create move action ? 
 			}
-			if (unit.x != x || unit.z != z) {
-				unit.x = x;
-				unit.z = z;
-				// todo on ExecTo
-				unit.MoveTo (chip);
-			}
-			unit.Action ();
 			_units [x, z] = unit;
 		}
-		_unitsTo.Clear ();
 	}
 
-	public void ExecTo() {
-		
+	public IEnumerator ExecTo() {
+		foreach (UnitController unit in _orderedUnits) {
+			// move action
+			CommandResultData commandResult = unit.CommandResult;
+			if (commandResult != null) {
+				if (commandResult.chip != null) {
+					unit.MoveTo (commandResult.chip);
+				} else {
+					// todo Motion 
+					foreach (UnitController receiver in commandResult.recievers.Keys) {
+						List<ActionResultData> results = commandResult.recievers[receiver];
+						StatusData prevStatus = receiver.UnitActiveData.CalcStatus;
+						foreach(ActionResultData result in results) {
+							// Reaction
+							StatusData nextStatus = result.receiverStatus;
+							receiver.UnitActiveData.CalcStatus = nextStatus;
+							int hpDiff = nextStatus.Hp - prevStatus.Mp;
+
+							// Damage
+							if (hpDiff < 0) {
+								receiver.Reaction ();
+							}
+								
+							// Effect
+							yield return new WaitForSeconds(0.1f);
+						}
+					}
+				}
+			}
+			yield return new WaitForSeconds(0.025f);
+		}
+		foreach (UnitController unit in _orderedUnits)
+			unit.ExecEnd ();
+		_unitsTo.Clear ();
 	}
 
 	void Awake() {

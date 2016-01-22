@@ -1,39 +1,69 @@
 ﻿using UnityEngine;
 using System.Collections;
+using System.Collections.Generic;
 
 public class UnitActiveData {
 
-	StatusData _status;
-	public StatusData Status { get { return _status; } } 
-	public void Setup(StatusData status) {
-		_status.Copy(status);
-	}
-	public UnitActiveData(UnitMasterData masterData) {
-		_status = new StatusData ();
-		_status.Copy(masterData.Status);
+	StatusData _baseStatus = new StatusData();
+	public StatusData BaseStatus { get { return _baseStatus; } } 
+
+	StatusData _nextStatus = new StatusData();
+	public StatusData NextStatus { 
+		get { return _nextStatus; } 
+		set { _nextStatus.Copy (value); } 
 	}
 
-	// todo calc chip buff
-	public int GetAttackPoint() {
-		return _status.Str;
-	}
-
-	// todo calc chip buff
-	public int GetDefencePoint() {
-		return _status.Def;
-	}
-
-	public void RecieveDamage(int damage) {
-		_status.Damage (damage);
-	}
-
-	public int ActionPoint { 
-		get { 
-			if (_status.Agi < GameManager.Instance.Master.AgiOnceToTwice)
-				return 5;
-			else if (_status.Agi < GameManager.Instance.Master.AgiTwiceAtTime)
-				return 10;
-			return 20;
+	[SerializeField] List<ItemMasterData> _equipItems = new List<ItemMasterData>();
+	public StatusData EquipStatus { get {
+			StatusData result = new StatusData (_baseStatus);
+			foreach (ItemMasterData item in _equipItems)
+				result += item.Status;
+			return result;
 		}
+	}
+
+	public void Update() {
+		_baseStatus.Update (_nextStatus);
+		CalcStatus = NextStatus = EquipStatus;
+	}
+
+	StatusData _calsStatus = new StatusData();
+	public StatusData CalcStatus { 
+		get { return _calsStatus; } 
+		set { _calsStatus.Copy(value); } 
+	}
+
+	public void Setup(StatusData status) {
+		_baseStatus.Copy(status);
+		CalcStatus = NextStatus = EquipStatus;
+	}
+
+	public int ActionPointBonus { 
+		get { return CalcStatus.Agi < GameManager.Instance.Master.AgiOnceToTwice ? 5 :
+			CalcStatus.Agi < GameManager.Instance.Master.AgiTwiceAtTime ? 10 : 20; }
+	}
+
+	public List<ActionResultData> CalcCommandResult(UnitActiveData receiver, CommandData command) {
+		List<ActionResultData> result = new List<ActionResultData>();
+		switch (command.Nature) {
+		case Define.Nature.Physical:
+			// todo shield skill
+			break;
+		case Define.Nature.Magical:
+			// todo barrier skill
+			break;
+		}
+
+		foreach(ActionData action in command.Actions) {
+			ActionResultData acitonResult = StatusData.CalcActionResult (
+				CalcStatus, receiver.CalcStatus, 
+				action, command.Nature, command.Element);
+			result.Add(acitonResult);
+		}
+		return result;
+	}
+
+	public UnitActiveData(UnitMasterData masterData) {
+		Setup (masterData.Status);
 	}
 }

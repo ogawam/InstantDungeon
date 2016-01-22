@@ -21,6 +21,13 @@ MonoBehaviour:
       _def: 0
       _agi: 5
       _lck: 2
+      _weakElement: 0
+      _attackElement: 0
+      _registElement: 0
+      _absorbElement: 0
+      x: 0
+      z: 0
+      ap: 0
   - _unitName: Wall
     _viewName: WallUnitView
     _status:
@@ -30,6 +37,13 @@ MonoBehaviour:
       _def: 0
       _agi: 0
       _lck: 0
+      _weakElement: 0
+      _attackElement: 0
+      _registElement: 0
+      _absorbElement: 0
+      x: 0
+      z: 0
+      ap: 0
   - _unitName: Slime
     _viewName: SlimeUnitView
     _status:
@@ -39,6 +53,13 @@ MonoBehaviour:
       _def: 0
       _agi: 1
       _lck: 0
+      _weakElement: 0
+      _attackElement: 0
+      _registElement: 0
+      _absorbElement: 0
+      x: 0
+      z: 0
+      ap: 0
   - _unitName: Goblin
     _viewName: GoblinUnitView
     _status:
@@ -46,8 +67,31 @@ MonoBehaviour:
       _mp: 0
       _str: 1
       _def: 0
-      _agi: 5
+      _agi: 8
       _lck: 0
+      _weakElement: 0
+      _attackElement: 0
+      _registElement: 0
+      _absorbElement: 0
+      x: 0
+      z: 0
+      ap: 0
+  - _unitName: Treasure
+    _viewName: treasureUnitView
+    _status:
+      _hp: 1
+      _mp: 0
+      _str: 0
+      _def: 0
+      _agi: 0
+      _lck: 0
+      _weakElement: 0
+      _attackElement: 0
+      _registElement: 0
+      _absorbElement: 0
+      x: 0
+      z: 0
+      ap: 0
   _chipData:
   - _chipName: Flat
     _viewName: FlatChipView
@@ -68,6 +112,13 @@ MonoBehaviour:
       _def: 0
       _agi: 0
       _lck: 0
+      _weakElement: 0
+      _attackElement: 0
+      _registElement: 0
+      _absorbElement: 0
+      x: 0
+      z: 0
+      ap: 0
     _equipRegion: 0
   - _itemName: BronzeHelm
     _viewSprite: {fileID: 21300000, guid: de41ff88b7b84434f9aa5c97a40ec2ee, type: 3}
@@ -78,6 +129,39 @@ MonoBehaviour:
       _def: 0
       _agi: 0
       _lck: 0
+      _weakElement: 0
+      _attackElement: 0
+      _registElement: 0
+      _absorbElement: 0
+      x: 0
+      z: 0
+      ap: 0
     _equipRegion: 1
+  _commandData:
+  - _name: Attack
+    _ready: 0
+    _range: 0
+    _scope: 0
+    _nature: 0
+    _element: 0
+    _actions:
+    - _method: 1
+      _dependAbility: 4
+      _dependSide: 1
+      _action:
+        _hp: -100
+        _mp: 0
+        _str: 0
+        _def: 0
+        _agi: 0
+        _lck: 0
+        _weakElement: 0
+        _attackElement: 0
+        _registElement: 0
+        _absorbElement: 0
+        x: 0
+        z: 0
+        ap: 0
+      _turn: 0
   _agiOnceToTwice: 5
   _agiTwiceAtTime: 10

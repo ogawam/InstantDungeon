@@ -19,6 +19,11 @@ public class MasterData : ScriptableObject {
 		return _itemMasterData.First (item => item.ItemName == name);
 	}
 
+	[SerializeField] CommandData[] _commandData;
+	public CommandData FindCommandData(string name) {
+		return _commandData.First (command => command.Name == name);
+	}
+
 	[SerializeField] int _agiOnceToTwice;
 	public int AgiOnceToTwice { get { return _agiOnceToTwice; } }
 	[SerializeField] int _agiTwiceAtTime;

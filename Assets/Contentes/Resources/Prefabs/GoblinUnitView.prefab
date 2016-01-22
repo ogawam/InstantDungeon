@@ -514,7 +514,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9888b9c70dd764f33bfc2b4bb1401de0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _type: 5
+  _type: 4
 --- !u!114 &11430260
 MonoBehaviour:
   m_ObjectHideFlags: 1
@@ -1319,7 +1319,7 @@ Prefab:
     m_Modifications:
     - target: {fileID: 0}
       propertyPath: _type
-      value: 1
+      value: 4
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_ParentPrefab: {fileID: 0}
