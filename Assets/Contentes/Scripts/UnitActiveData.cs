@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 
+[System.Serializable]
 public class UnitActiveData {
 
 	StatusData _baseStatus = new StatusData();
@@ -27,10 +28,10 @@ public class UnitActiveData {
 		CalcStatus = NextStatus = EquipStatus;
 	}
 
-	StatusData _calsStatus = new StatusData();
+	StatusData _calcStatus = new StatusData();
 	public StatusData CalcStatus { 
-		get { return _calsStatus; } 
-		set { _calsStatus.Copy(value); } 
+		get { return _calcStatus; } 
+		set { _calcStatus.Copy(value); } 
 	}
 
 	public void Setup(StatusData status) {
@@ -55,10 +56,12 @@ public class UnitActiveData {
 		}
 
 		foreach(ActionData action in command.Actions) {
-			ActionResultData acitonResult = StatusData.CalcActionResult (
+			ActionResultData actionResult = StatusData.CalcActionResult (
 				CalcStatus, receiver.CalcStatus, 
 				action, command.Nature, command.Element);
-			result.Add(acitonResult);
+			result.Add(actionResult);
+			receiver.CalcStatus = actionResult.receiverStatus;
+			CalcStatus = actionResult.senderStatus;
 		}
 		return result;
 	}

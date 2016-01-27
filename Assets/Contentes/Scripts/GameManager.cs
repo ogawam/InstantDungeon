@@ -30,40 +30,45 @@ public class GameManager : Utility.Singleton<GameManager> {
 	List<UnitController> _objectUnits  = new List<UnitController>();
 
 	public void Click(ChipController chip) {
-		int selectItemHolderIndex = InterfaceManager.Instance.SelectItemHolderIndex;
-		if (selectItemHolderIndex < 0)
-			return;
+		if (_heroUnit.IsEnableAction) {
+			int selectItemHolderIndex = InterfaceManager.Instance.SelectItemHolderIndex;
+			if (selectItemHolderIndex < 0)
+				return;
 
-		ItemMasterData itemMasterData = _holdItems [selectItemHolderIndex];
-		if (itemMasterData != null) {
-			if (itemMasterData.EquipRegion != Define.Region.None
-				&& StageManager.Instance.GetUnit(chip.x, chip.z) == _heroUnit) 
-			{
-				_heroUnit.Equip (itemMasterData.EquipRegion, itemMasterData);
-				InterfaceManager.Instance.SetEquip (selectItemHolderIndex, true);
-				Action (_heroUnit.x, _heroUnit.z);
+			ItemMasterData itemMasterData = _holdItems [selectItemHolderIndex];
+			if (itemMasterData != null) {
+				if (itemMasterData.EquipRegion != Define.Region.None
+				    && StageManager.Instance.GetUnit (chip.x, chip.z) == _heroUnit) {
+					_heroUnit.Equip (itemMasterData.EquipRegion, itemMasterData);
+					InterfaceManager.Instance.SetEquip (selectItemHolderIndex, true);
+					Action (_heroUnit.x, _heroUnit.z);
+				}
 			}
-		}
 
-		InterfaceManager.Instance.ClickItemHolder (null);
+			InterfaceManager.Instance.ClickItemHolder (null);
+		}
 	}
 
 	Define.Direction _dragDirection = Define.Direction.Up;
 	float _dragRate = 0;
 
 	public void Drag(PointerEventData eventData) {
-//		Debug.Log ("delta " + (eventData.position - eventData.pressPosition));
-		Vector3 slide = eventData.position - eventData.pressPosition;
-		InterfaceManager.Instance.ArrowView.Disp ();
-		if (Mathf.Abs (slide.x) > Mathf.Abs (slide.y)) {
-			_dragDirection = slide.x > 0 ? Define.Direction.Right : Define.Direction.Left;
-			_dragRate = Mathf.Min (1, Mathf.Abs (slide.x) / Define.DragToMove);
+		if (_heroUnit.IsEnableAction) {
+			//		Debug.Log ("delta " + (eventData.position - eventData.pressPosition));
+			Vector3 slide = eventData.position - eventData.pressPosition;
+			InterfaceManager.Instance.ArrowView.Disp ();
+			if (Mathf.Abs (slide.x) > Mathf.Abs (slide.y)) {
+				_dragDirection = slide.x > 0 ? Define.Direction.Right : Define.Direction.Left;
+				_dragRate = Mathf.Min (1, Mathf.Abs (slide.x) / Define.DragToMove);
+			} else {
+				_dragDirection = slide.y > 0 ? Define.Direction.Up : Define.Direction.Down;
+				_dragRate = Mathf.Min (1, Mathf.Abs (slide.y) / Define.DragToMove);
+			}
+			InterfaceManager.Instance.ArrowView.Fill (_dragDirection, _dragRate);
+			InterfaceManager.Instance.ArrowView.transform.localPosition = _heroUnit.UnitView.transform.localPosition;
 		} else {
-			_dragDirection = slide.y > 0 ? Define.Direction.Up : Define.Direction.Down;
-			_dragRate = Mathf.Min (1, Mathf.Abs (slide.y) / Define.DragToMove);
+			InterfaceManager.Instance.ArrowView.Hide ();
 		}
-		InterfaceManager.Instance.ArrowView.Fill (_dragDirection, _dragRate);
-		InterfaceManager.Instance.ArrowView.transform.localPosition = _heroUnit.UnitView.transform.localPosition;
 	}
 
 	public void DragEnd(PointerEventData eventData) {
@@ -85,14 +90,16 @@ public class GameManager : Utility.Singleton<GameManager> {
 	}
 
 	public void Action(int x, int z) {
-		StageManager sm = StageManager.Instance;
+		if (_heroUnit.IsEnableAction) {
+			StageManager sm = StageManager.Instance;
 
-		ChipController chip = sm.GetChip (x, z);
-		UnitController unit = sm.FindUnit (chip);
+			ChipController chip = sm.GetChip (x, z);
+			UnitController unit = sm.FindUnit (chip);
 
-		if (chip != null && (unit == null || unit.IsRecievable)) {
-			sm.UnitTo (_heroUnit, chip);
-			StartCoroutine(ProgressAction ());
+			if (chip != null && (unit == null || unit.IsRecievable)) {
+				sm.UnitTo (_heroUnit, chip);
+				StartCoroutine (ProgressAction ());
+			}
 		}
 	}
 
@@ -143,7 +150,12 @@ public class GameManager : Utility.Singleton<GameManager> {
 		_heroUnit.CalcEnd ();
 		foreach(UnitController monsterUnit in _monsterUnits)
 			monsterUnit.CalcEnd ();
+		
 		yield return StartCoroutine(sm.ExecTo ());
+		_heroUnit.ExecEnd ();
+		foreach (UnitController unit in _monsterUnits)
+			unit.ExecEnd ();
+		
 		if (sm.GetChip (_heroUnit.x, _heroUnit.z).ChipType == Define.Chip.Stairs) {
 			CreateMap (_floorNo + 1);
 		}
@@ -167,7 +179,13 @@ public class GameManager : Utility.Singleton<GameManager> {
 
 	// todo refactaling
 	public void Action(UnitController sender, List<UnitController> receivers) {
+		Development.LogAction ("-----------------------------");
 		sender.CalcCommandResult(receivers, _master.FindCommandData("Attack"));
+		foreach(UnitController receiver in receivers) {
+			if (receiver.UnitActiveData.CalcStatus.GetCondition (Define.Condition.Dead) != null) {
+				StageManager.Instance.RemoveUnit (receiver);
+			}
+		}
 	}
 
 	public void Open(UnitController targetUnit, UnitController actionUnit) {
@@ -227,7 +245,7 @@ public class GameManager : Utility.Singleton<GameManager> {
 			blankUnits.Remove (wallPos);
 		}
 
-		int monsterNum = 1;//Random.Range (5, 10);	// todo stage data
+		int monsterNum = Random.Range (5, 10);	// todo stage data
 		for (int i = 0; i < monsterNum; ++i) {
 			int monsterLot = Random.Range (0, blankUnits.Count);
 			int monsterPos = blankUnits[monsterLot];
@@ -286,11 +304,13 @@ public class GameManager : Utility.Singleton<GameManager> {
 		}
 	}
 
+	static int totalNo = 0;
 	private UnitController CreateUnit(string unitName, Define.Unit unitType, Define.Side side) {
 		UnitController result = new GameObject ().AddComponent<UnitController> ();
 		UnitMasterData unitMaster = _master.FindUnitData (unitName);
 		result.Setup (unitMaster, unitType, side);
-		result.name = unitName;
+		result.name = System.String.Format("{0,2:D2}:{1}",totalNo.ToString(), unitName);
+		totalNo++;
 		return result;
 	}
 

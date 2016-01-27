@@ -21,6 +21,7 @@ public class CommandData {
 	public ActionData[] Actions { get { return _actions; } }
 }
 
+[System.Serializable]
 public class CommandResultData {
 	public UnitController sender = null;
 	public ChipController chip = null;

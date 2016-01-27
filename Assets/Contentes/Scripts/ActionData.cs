@@ -16,6 +16,7 @@ public class ActionData {
 	public int Turn { get { return _turn; } }
 }
 
+[System.Serializable]
 public class ActionResultData {
 	public ActionData action;
 	public StatusData senderStatus;

@@ -32,8 +32,8 @@ public class StatusData {
 	public int z = 0;
 	public int ap = 0;
 
-	public bool IsLive { get { return _hp > 0; } }
-	public bool IsDead { get { return !IsLive; } }
+	public bool IsLive { get { return !IsDead; } }
+	public bool IsDead { get { return GetCondition(Define.Condition.Dead) != null; } }
 
 	public void AddCondition(Define.Condition condition, int turn) {
 		ConditionData conditionData = GetCondition(condition);
@@ -63,13 +63,11 @@ public class StatusData {
 	}
 
 	public void Update(StatusData status) {
-		Debug.Log("x "+ x + " -> "+ status.x+ " z " + z + " -> " + status.z);
 		x = status.x;
 		z = status.z;
 		ap = status.ap;
 		_hp = status._hp;
 		_mp = status._mp;
-		Debug.Log ("x " + x+ " z "+ z);
 		_conditions = new List<ConditionData> (status._conditions);
 	}
 
@@ -147,8 +145,10 @@ public class StatusData {
 			}
 		}
 
+		Development.LogAction( "depend "+ action.DependSide + " Ability " + action.DependAbility + " = " + value);
+
 		if(action.Action.Hp != 0) {
-			
+
 			switch (action.Method) {
 			case Define.Method.Addition:
 				value += action.Action.Hp;
@@ -158,20 +158,24 @@ public class StatusData {
 				break;
 			}
 
+			Development.LogAction( "hp " + action.Action.Hp + " method "+ action.Method);
+
 			if (value < 0) {
 				isAttack = true;
 				value = Mathf.Min(0, value + result.receiverStatus.Def);
 
-				if((element & result.receiverStatus.WeakElement) != 0) {
-					multi = 200;
-				}
-				// Absorb and Regist Invoke at exist all element
-				else if((element & (result.receiverStatus.AbsorbElement | result.receiverStatus.RegistElement)) == element) {
-					if ((element & result.receiverStatus.AbsorbElement) == element) {
-						value = result.senderStatus.Str;
-						isAttack = false;
+				if (element != 0) {
+					if ((element & result.receiverStatus.WeakElement) != 0) {
+						multi = 200;
 					}
-					else multi = 0;
+					// Absorb and Regist Invoke at exist all element
+					else if ((element & (result.receiverStatus.AbsorbElement | result.receiverStatus.RegistElement)) == element) {
+						if ((element & result.receiverStatus.AbsorbElement) == element) {
+							value = result.senderStatus.Str;
+							isAttack = false;
+						} else
+							multi = 0;
+					}
 				}
 			}
 			int hpAdd = value != 0 && multi != 0 ? value * multi / 100: 0;
@@ -181,12 +185,17 @@ public class StatusData {
 					hpAdd = Mathf.Max(hpAdd, 0);
 				else hpAdd = Mathf.Max(hpAdd, -1);
 			}
+
+			Development.LogAction( "prev hp " + result.receiverStatus._hp + " add " + hpAdd + " next hp " + (result.receiverStatus._hp + hpAdd));
+
 			result.receiverStatus._hp += hpAdd;
+
 			if (result.receiverStatus._hp <= 0) {
 				result.receiverStatus._hp = 0;
 				result.receiverStatus.AddCondition (Define.Condition.Dead, -1);
 			}
 		}
+		result.senderStatus.ap -= 10;
 		return result;
 	}
 }

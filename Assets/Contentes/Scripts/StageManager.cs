@@ -85,6 +85,7 @@ public class StageManager : Utility.Singleton<StageManager> {
 	}
 
 	public void UnitTo(UnitController unit, ChipController chip) {
+		Development.LogAction ("unit to "+ unit.name);
 		_unitsTo.Add (unit, chip);
 	}
 
@@ -117,10 +118,11 @@ public class StageManager : Utility.Singleton<StageManager> {
 				case Define.Unit.Monster:
 					if (rideUnit.IsRecievable && unit.Side != rideUnit.Side)
 						GameManager.Instance.Action (unit, new List<UnitController>(){ rideUnit });
+					else unit.CalcCommandResult (GetChip(x, z), null);	// create move action ? 
 					break;
 				}
 			} 
-			else if (unit.x != x || unit.z != z) {
+			else {
 				unit.CalcCommandResult (chip, null);	// create move action ? 
 			}
 			_units [x, z] = unit;
@@ -136,20 +138,39 @@ public class StageManager : Utility.Singleton<StageManager> {
 					unit.MoveTo (commandResult.chip);
 				} else {
 					// todo Motion 
+
 					foreach (UnitController receiver in commandResult.recievers.Keys) {
 						List<ActionResultData> results = commandResult.recievers[receiver];
-						StatusData prevStatus = receiver.UnitActiveData.CalcStatus;
 						foreach(ActionResultData result in results) {
 							// Reaction
+							StatusData prevStatus = receiver.UnitActiveData.CalcStatus;
 							StatusData nextStatus = result.receiverStatus;
+							int hpDiff = nextStatus.Hp - prevStatus.Hp;
+
+							Development.LogAction ("hp diff "+ hpDiff);
+
 							receiver.UnitActiveData.CalcStatus = nextStatus;
-							int hpDiff = nextStatus.Hp - prevStatus.Mp;
 
 							// Damage
 							if (hpDiff < 0) {
 								receiver.Reaction ();
 							}
-								
+
+							if (receiver.UnitActiveData.CalcStatus.IsDead) {
+								StageManager.Instance.RemoveUnit (receiver);
+/*
+								if (Random.value < 0.1f) {
+									UnitController unitController = CreateUnit ("Treasure", Define.Unit.Treasure, Define.Side.Party);
+									unitController.transform.SetParent (_unitRoot.transform);
+									unitController.x = defence.x;
+									unitController.z = defence.z;
+									_objectUnits.Add (unitController);
+									StageManager.Instance.SetUnit (unitController);
+								}
+*/								
+//								defence.UnitView.gameObject.SetActive(false);
+							}
+
 							// Effect
 							yield return new WaitForSeconds(0.1f);
 						}
@@ -158,9 +179,8 @@ public class StageManager : Utility.Singleton<StageManager> {
 			}
 			yield return new WaitForSeconds(0.025f);
 		}
-		foreach (UnitController unit in _orderedUnits)
-			unit.ExecEnd ();
 		_unitsTo.Clear ();
+		Development.LogAction ("clear units to");
 	}
 
 	void Awake() {

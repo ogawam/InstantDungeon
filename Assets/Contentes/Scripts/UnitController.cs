@@ -24,7 +24,7 @@ public class UnitController : MonoBehaviour {
 	Dictionary<Define.Region, ItemMasterData> _equipItems = new Dictionary<Define.Region, ItemMasterData>();
 
 	public bool IsEnableAction { 
-		get { return UnitActiveData.BaseStatus.IsLive && UnitActiveData.BaseStatus.ap >= 10; } 
+		get { return UnitActiveData.CalcStatus.IsLive && UnitActiveData.CalcStatus.ap >= 10; } 
 	}
 
 	public int x { 
@@ -73,32 +73,21 @@ public class UnitController : MonoBehaviour {
 
 		_commandResultData.moveStatus.x = chip.x;
 		_commandResultData.moveStatus.z = chip.z;
+		_commandResultData.moveStatus.ap -= 10;
 		UnitActiveData.CalcStatus = _commandResultData.moveStatus;
 	}
 
 	// todo refactaling
 	public void CalcCommandResult(List<UnitController> receivers, CommandData command) {
+		Development.LogAction(UnitMasterData.UnitName + "." + command.Name);
 		_commandResultData = new CommandResultData () { sender = this };
-		foreach(UnitController receiver in receivers)
-			_commandResultData.recievers[receiver] = UnitActiveData.CalcCommandResult(receiver.UnitActiveData, command);
-	/*
-		if (defence.UnitActiveData.Status.IsDead) {
-			StageManager.Instance.RemoveUnit (defence);
-			if (Random.value < 0.1f) {
-				UnitController unitController = CreateUnit ("Treasure", Define.Unit.Treasure, Define.Side.Party);
-				unitController.transform.SetParent (_unitRoot.transform);
-				unitController.x = defence.x;
-				unitController.z = defence.z;
-				_objectUnits.Add (unitController);
-				StageManager.Instance.SetUnit (unitController);
-			}
-			//			defence.UnitView.gameObject.SetActive(false);
+		foreach (UnitController receiver in receivers) {
+			Development.LogAction("receiver " + receiver.UnitMasterData.UnitName);
+			_commandResultData.recievers [receiver] = UnitActiveData.CalcCommandResult (receiver.UnitActiveData, command);
 		}
-	*/
 	}
 
 	public void CalcEnd() {
-		UnitActiveData.CalcStatus.ap -= 10;
 		UnitActiveData.NextStatus = UnitActiveData.CalcStatus;
 		UnitActiveData.CalcStatus = UnitActiveData.EquipStatus;
 	}
