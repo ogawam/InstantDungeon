@@ -43,8 +43,8 @@ public class UnitView : MonoBehaviour {
 		}
 	}
 
-	public void MoveTo(ChipView chipTo) {
-		transform.DOLocalJump(chipTo.transform.localPosition, 40, 1, 0.5f);
+	public IEnumerator DoMove(ChipView chipTo) {
+		yield return transform.DOLocalJump (chipTo.transform.localPosition, 40, 1, 0.5f).WaitForCompletion();
 	}
 
 	void OnDrawGizmos() {

@@ -22,6 +22,7 @@ public class GameManager : Utility.Singleton<GameManager> {
 
 	int _floorNo = 0;
 	int _turn = 1;
+	bool _inExec = false;
 
 	ItemMasterData[] _holdItems = new ItemMasterData[Define.ItemHolderMax]; 
 
@@ -51,8 +52,10 @@ public class GameManager : Utility.Singleton<GameManager> {
 
 	Define.Direction _dragDirection = Define.Direction.Up;
 	float _dragRate = 0;
+	bool _isDragged = false;
 
 	public void Drag(PointerEventData eventData) {
+
 		if (_heroUnit.IsEnableAction) {
 			//		Debug.Log ("delta " + (eventData.position - eventData.pressPosition));
 			Vector3 slide = eventData.position - eventData.pressPosition;
@@ -73,19 +76,8 @@ public class GameManager : Utility.Singleton<GameManager> {
 
 	public void DragEnd(PointerEventData eventData) {
 		InterfaceManager.Instance.ArrowView.Hide ();
-
 		if(_dragRate == 1) {
-			int x = _heroUnit.x;
-			int z = _heroUnit.z;
-
-			switch (_dragDirection) {
-			case Define.Direction.Up: z++; break;
-			case Define.Direction.Down: z--; break;
-			case Define.Direction.Left: x--; break;
-			case Define.Direction.Right: x++; break;
-			}
-
-			Action (x, z);
+			_isDragged = true;
 		}
 	}
 
@@ -112,6 +104,7 @@ public class GameManager : Utility.Singleton<GameManager> {
 	}
 		
 	public IEnumerator ProgressAction() {
+		_inExec = true;
 		StageManager sm = StageManager.Instance;
 		foreach (UnitController monsterUnit in _monsterUnits) {
 			if (!monsterUnit.IsEnableAction)
@@ -150,15 +143,17 @@ public class GameManager : Utility.Singleton<GameManager> {
 		_heroUnit.CalcEnd ();
 		foreach(UnitController monsterUnit in _monsterUnits)
 			monsterUnit.CalcEnd ();
-		
+
 		yield return StartCoroutine(sm.ExecTo ());
 		_heroUnit.ExecEnd ();
 		foreach (UnitController unit in _monsterUnits)
 			unit.ExecEnd ();
+		sm.Sort ();
 		
 		if (sm.GetChip (_heroUnit.x, _heroUnit.z).ChipType == Define.Chip.Stairs) {
 			CreateMap (_floorNo + 1);
 		}
+		_inExec = false;
 
 		switch (Check ()) {
 		case CheckResult.PlayerInput:
@@ -310,6 +305,8 @@ public class GameManager : Utility.Singleton<GameManager> {
 		UnitMasterData unitMaster = _master.FindUnitData (unitName);
 		result.Setup (unitMaster, unitType, side);
 		result.name = System.String.Format("{0,2:D2}:{1}",totalNo.ToString(), unitName);
+		result.UnitView.name = result.name + "View";
+
 		totalNo++;
 		return result;
 	}
@@ -357,6 +354,28 @@ public class GameManager : Utility.Singleton<GameManager> {
 	
 	// Update is called once per frame
 	void Update () {
+		if (_isDragged && !_inExec) {
+			int x = _heroUnit.x;
+			int z = _heroUnit.z;
+
+			switch (_dragDirection) {
+			case Define.Direction.Up:
+				z++;
+				break;
+			case Define.Direction.Down:
+				z--;
+				break;
+			case Define.Direction.Left:
+				x--;
+				break;
+			case Define.Direction.Right:
+				x++;
+				break;
+			}
+
+			Action (x, z);
+			_isDragged = false;
+		}
 #if !UNITY_EDITOR
 		Vector2 gravity2D = new Vector2(Input.acceleration.x, Input.acceleration.y).normalized;
 		Physics2D.gravity = gravity2D * Physics2D.gravity.magnitude;
@@ -365,7 +384,7 @@ public class GameManager : Utility.Singleton<GameManager> {
 
 	void OnGUI() {
 		#if UNITY_EDITOR
-		GUILayout.Label ("turn "+ _turn);
+		GUILayout.Label ("turn "+ _turn + " dragged " + _isDragged);
 		GUILayout.Label (_heroUnit.name + " ap " + _heroUnit.UnitActiveData.BaseStatus.ap);
 		foreach (UnitController monsterUnit in _monsterUnits)
 			GUILayout.Label (monsterUnit.name + " ap "+ monsterUnit.UnitActiveData.BaseStatus.ap);

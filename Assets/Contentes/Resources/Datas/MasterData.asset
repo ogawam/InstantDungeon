@@ -19,12 +19,13 @@ MonoBehaviour:
       _mp: 3
       _str: 2
       _def: 0
-      _agi: 5
+      _agi: 8
       _lck: 2
       _weakElement: 0
       _attackElement: 0
       _registElement: 0
       _absorbElement: 0
+      _conditions: []
       x: 0
       z: 0
       ap: 0
@@ -41,6 +42,7 @@ MonoBehaviour:
       _attackElement: 0
       _registElement: 0
       _absorbElement: 0
+      _conditions: []
       x: 0
       z: 0
       ap: 0
@@ -57,22 +59,24 @@ MonoBehaviour:
       _attackElement: 0
       _registElement: 0
       _absorbElement: 0
+      _conditions: []
       x: 0
       z: 0
       ap: 0
   - _unitName: Goblin
     _viewName: GoblinUnitView
     _status:
-      _hp: 2
+      _hp: 1
       _mp: 0
       _str: 1
       _def: 0
-      _agi: 8
+      _agi: 6
       _lck: 0
       _weakElement: 0
       _attackElement: 0
       _registElement: 0
       _absorbElement: 0
+      _conditions: []
       x: 0
       z: 0
       ap: 0
@@ -89,6 +93,7 @@ MonoBehaviour:
       _attackElement: 0
       _registElement: 0
       _absorbElement: 0
+      _conditions: []
       x: 0
       z: 0
       ap: 0
@@ -116,6 +121,7 @@ MonoBehaviour:
       _attackElement: 0
       _registElement: 0
       _absorbElement: 0
+      _conditions: []
       x: 0
       z: 0
       ap: 0
@@ -133,6 +139,7 @@ MonoBehaviour:
       _attackElement: 0
       _registElement: 0
       _absorbElement: 0
+      _conditions: []
       x: 0
       z: 0
       ap: 0
@@ -159,6 +166,7 @@ MonoBehaviour:
         _attackElement: 0
         _registElement: 0
         _absorbElement: 0
+        _conditions: []
         x: 0
         z: 0
         ap: 0

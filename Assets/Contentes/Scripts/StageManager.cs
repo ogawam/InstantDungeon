@@ -6,7 +6,7 @@ using System.Linq;
 public class StageManager : Utility.Singleton<StageManager> {
 
 	[SerializeField] RectTransform _backGround;
-	[SerializeField] RectTransform _foreGround;
+	[SerializeField] RectTransform _mainGround;
 
 	[SerializeField] List<Define.Chip> _chipPriority;
 
@@ -59,10 +59,10 @@ public class StageManager : Utility.Singleton<StageManager> {
 		int z = unit.z;
 		Vector3 position = _positions [x, z];
 		unit.UnitView.Stop ();
-		unit.UnitView.transform.SetParent (_foreGround, false);
+		unit.UnitView.transform.SetParent (_mainGround, false);
 		unit.UnitView.transform.localPosition = position;
-		for (int i = 0; i < _foreGround.childCount; ++i) {
-			if (position.y > _foreGround.GetChild (i).transform.localPosition.y) {
+		for (int i = 0; i < _mainGround.childCount; ++i) {
+			if (position.y > _mainGround.GetChild (i).transform.localPosition.y) {
 				unit.UnitView.transform.SetSiblingIndex (i);
 				break;
 			}
@@ -130,15 +130,16 @@ public class StageManager : Utility.Singleton<StageManager> {
 	}
 
 	public IEnumerator ExecTo() {
+		int prevAgi = 0;
+		List<Coroutine> coroutines = new List<Coroutine>(); 
 		foreach (UnitController unit in _orderedUnits) {
 			// move action
 			CommandResultData commandResult = unit.CommandResult;
 			if (commandResult != null) {
 				if (commandResult.chip != null) {
-					unit.MoveTo (commandResult.chip);
+					coroutines.Add(StartCoroutine(unit.DoMove (commandResult.chip)));
 				} else {
 					// todo Motion 
-
 					foreach (UnitController receiver in commandResult.recievers.Keys) {
 						List<ActionResultData> results = commandResult.recievers[receiver];
 						foreach(ActionResultData result in results) {
@@ -177,10 +178,23 @@ public class StageManager : Utility.Singleton<StageManager> {
 					}
 				}
 			}
-			yield return new WaitForSeconds(0.025f);
+			if (unit.UnitActiveData.CalcStatus.Agi != prevAgi) {
+				prevAgi = unit.UnitActiveData.CalcStatus.Agi;
+				yield return new WaitForSeconds(0.005f);
+			}
 		}
 		_unitsTo.Clear ();
+		foreach(Coroutine coroutine in coroutines)
+			yield return coroutine;
+
 		Development.LogAction ("clear units to");
+	}
+
+	public void Sort() {
+		List<UnitView> views = new List<UnitView>(_mainGround.GetComponentsInChildren<UnitView> ());
+		views.Sort ((UnitView l, UnitView r) => (int)(r.transform.localPosition.y - l.transform.localPosition.y));
+		for (int i = 0; i < views.Count; ++i)
+			views [i].transform.SetSiblingIndex (i);
 	}
 
 	void Awake() {

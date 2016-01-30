@@ -118,8 +118,8 @@ public class UnitController : MonoBehaviour {
 	CommandResultData _commandResultData = null;
 	public CommandResultData CommandResult { get { return _commandResultData; } }
 		
-	public void MoveTo(ChipController chipTo) {
-		_unitView.MoveTo (chipTo.ChipView);
+	public IEnumerator DoMove(ChipController chipTo) {
+		yield return StartCoroutine(_unitView.DoMove (chipTo.ChipView));
 	}
 
 	// Use this for initialization
@@ -135,7 +135,8 @@ public class UnitController : MonoBehaviour {
 
 	public void Remove() {
 		Destroy (_unitView.gameObject);
-		if(_hudView != null) Destroy (_hudView.gameObject);
+		if(_hudView != null) 
+			Destroy (_hudView.gameObject);
 		Destroy (gameObject);
 	}
 }
