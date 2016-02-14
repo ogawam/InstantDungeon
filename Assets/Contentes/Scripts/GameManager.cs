@@ -1,10 +1,14 @@
 ﻿using UnityEngine;
+using UnityEngine.UI;
 using UnityEngine.EventSystems;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using UniRx;
 
 public class GameManager : Utility.Singleton<GameManager> {
+
+	[SerializeField] Canvas _canvas;
 
 	[SerializeField] string[] _monsterNames;
 
@@ -12,6 +16,7 @@ public class GameManager : Utility.Singleton<GameManager> {
 		PlayerInput,
 		EnemyAction,
 		AdvanceTurn,
+		Treasure,
 	};
 
 	GameObject _chipRoot = null;
@@ -76,9 +81,7 @@ public class GameManager : Utility.Singleton<GameManager> {
 
 	public void DragEnd(PointerEventData eventData) {
 		InterfaceManager.Instance.ArrowView.Hide ();
-		if(_dragRate == 1) {
-			_isDragged = true;
-		}
+		_isDragged = (_dragRate == 1);
 	}
 
 	public void Action(int x, int z) {
@@ -94,6 +97,55 @@ public class GameManager : Utility.Singleton<GameManager> {
 			}
 		}
 	}
+
+	public void TreasureOpen() {
+		StartCoroutine (TreasureOpenCoroutine());
+	}
+
+	IEnumerator TreasureOpenCoroutine() {
+		InterfaceManager.Instance.SetVisibleTreasure (false);
+		yield return StartCoroutine(_heroUnit.openUnit.Open ());
+		StageManager.Instance.RemoveUnit (_heroUnit.openUnit);
+		_heroUnit.openUnit = null;
+
+		switch (Check ()) {
+		case CheckResult.PlayerInput:
+			break;
+		case CheckResult.Treasure:
+			InterfaceManager.Instance.SetVisibleTreasure (true);
+			break;
+		case CheckResult.EnemyAction:
+			yield return StartCoroutine (ProgressAction());
+			break;
+		case CheckResult.AdvanceTurn:
+			ProgressTurn ();
+			break;
+		}
+	}
+
+	public void TreasureDestruction() {
+		StartCoroutine (TreasureDestructionCoroutine ());
+	}
+
+	public IEnumerator TreasureDestructionCoroutine() {
+		InterfaceManager.Instance.SetVisibleTreasure (false);
+		yield return StartCoroutine (_heroUnit.openUnit.Destruction ());
+		StageManager.Instance.RemoveUnit (_heroUnit.openUnit);
+		_heroUnit.openUnit = null;
+
+		switch (Check ()) {
+		case CheckResult.PlayerInput:
+			break;
+		case CheckResult.Treasure:
+			InterfaceManager.Instance.SetVisibleTreasure (true);
+			break;
+		case CheckResult.EnemyAction:
+			yield return StartCoroutine (ProgressAction());
+			break;
+		case CheckResult.AdvanceTurn:
+			ProgressTurn ();
+			break;
+		}	}
 
 	public void ProgressTurn() {
 		_turn++;
@@ -149,7 +201,7 @@ public class GameManager : Utility.Singleton<GameManager> {
 		foreach (UnitController unit in _monsterUnits)
 			unit.ExecEnd ();
 		sm.Sort ();
-		
+
 		if (sm.GetChip (_heroUnit.x, _heroUnit.z).ChipType == Define.Chip.Stairs) {
 			CreateMap (_floorNo + 1);
 		}
@@ -157,6 +209,9 @@ public class GameManager : Utility.Singleton<GameManager> {
 
 		switch (Check ()) {
 		case CheckResult.PlayerInput:
+			break;
+		case CheckResult.Treasure:
+			InterfaceManager.Instance.SetVisibleTreasure (true);
 			break;
 		case CheckResult.EnemyAction:
 			yield return StartCoroutine (ProgressAction());
@@ -176,15 +231,44 @@ public class GameManager : Utility.Singleton<GameManager> {
 	public void Action(UnitController sender, List<UnitController> receivers) {
 		Development.LogAction ("-----------------------------");
 		sender.CalcCommandResult(receivers, _master.FindCommandData("Attack"));
-		foreach(UnitController receiver in receivers) {
+		foreach (UnitController receiver in receivers) {
 			if (receiver.UnitActiveData.CalcStatus.GetCondition (Define.Condition.Dead) != null) {
 				StageManager.Instance.RemoveUnit (receiver);
+				if (receiver.Side == Define.Side.Enemy) {
+					// todo : calcurate treature drop rate
+					foreach (DropMasterData dropData in receiver.UnitMasterData.DropDatas) {
+						if ((Random.Range(1, 1000000) / 100) < dropData.Rate) {
+							switch (dropData.DropType) {
+							case Define.DropType.Pop:
+								receiver.dropPop = CreatePop (dropData, receiver.x, receiver.z);
+								break;
+							case Define.DropType.Item:
+								{
+									UnitController unitController = CreateUnit ("Treasure", Define.Unit.Treasure, Define.Side.Party);
+									unitController.transform.SetParent (_unitRoot.transform);
+									unitController.x = receiver.x;
+									unitController.z = receiver.z;
+									unitController.dropItem = _master.FindItemData(dropData.ItemName);
+									_objectUnits.Add (unitController);
+									StageManager.Instance.SetUnit (unitController);
+									receiver.dropUnit = unitController;
+								}
+								break;
+							}
+							break;
+						}
+					}
+				}
 			}
 		}
 	}
 
-	public void Open(UnitController targetUnit, UnitController actionUnit) {
-				
+	//
+	public void Open(UnitController sender, UnitController receiver) {
+		Development.LogAction ("-----------------------------");
+		Development.LogAction ("Open");
+		sender.CalcCommandResult(StageManager.Instance.GetChip(sender.x, sender.z), null);
+		sender.openUnit = receiver;
 	}
 		
 	void CreateMap(int floorNo) {
@@ -252,18 +336,9 @@ public class GameManager : Utility.Singleton<GameManager> {
 			entryChips [posKey] = Define.Chip.Flat;
 		blankChips.Clear ();
 
-		foreach(int posKey in entryChips.Keys) {
-			Define.Chip chipType = entryChips [posKey];
-			int x = posKey % 100;
-			int z = posKey / 100;
-
-			ChipController chipController = new GameObject (typeof(ChipController).ToString() + "["+ x + "]["+ z + "]").AddComponent<ChipController> ();
-			chipController.transform.SetParent (_chipRoot.transform);
-			chipController.Setup (_master.FindChipData (chipType.ToString()), chipType);	// todo data name to enum
-			chipController.x = x;
-			chipController.z = z;
-			StageManager.Instance.SetChip (chipController);
-		}	
+		foreach(int posKey in entryChips.Keys)
+			CreateChip (posKey % 100, posKey / 100, entryChips [posKey]);
+		
 		ChipController stairChip = StageManager.Instance.GetChip (stairsPos % 100, stairsPos / 100);
 		stairChip.ChipView.transform.SetSiblingIndex (stairChip.ChipView.transform.parent.childCount);
 
@@ -295,6 +370,7 @@ public class GameManager : Utility.Singleton<GameManager> {
 			unitController.transform.SetParent(_unitRoot.transform);
 			unitController.x = x;
 			unitController.z = z;
+			unitController.StartCoroutine (unitController.Appear ());
 			StageManager.Instance.SetUnit(unitController);
 		}
 	}
@@ -311,7 +387,28 @@ public class GameManager : Utility.Singleton<GameManager> {
 		return result;
 	}
 
+	private ChipController CreateChip(int x, int z, Define.Chip chipType) {
+		ChipController chipController = new GameObject (typeof(ChipController).ToString() + "["+ x + "]["+ z + "]").AddComponent<ChipController> ();
+		chipController.transform.SetParent (_chipRoot.transform);
+		chipController.Setup (_master.FindChipData (chipType.ToString()), chipType);	// todo data name to enum
+		chipController.x = x;
+		chipController.z = z;
+		StageManager.Instance.SetChip (chipController);
+		return chipController;
+	}
+
+	private PopController CreatePop(DropMasterData dropData, int x, int z) {
+		PopController popController = new GameObject (typeof(PopController).ToString() + "["+ x + "]["+ z + "]").AddComponent<PopController> ();
+		popController.Setup (dropData);
+		popController.x = x;
+		popController.z = z;
+		StageManager.Instance.SetPop (popController);
+		return popController;
+	}
+
 	private CheckResult Check() {
+		if (_heroUnit.openUnit != null)
+			return CheckResult.Treasure;
 		if (_heroUnit.IsEnableAction)
 			return CheckResult.PlayerInput;
 		foreach (UnitController monsterUnit in _monsterUnits)
@@ -320,8 +417,35 @@ public class GameManager : Utility.Singleton<GameManager> {
 		return CheckResult.AdvanceTurn;
 	}
 
+
+	ReactiveProperty<DeviceOrientation> _orientation = null;
+
 	// Use this for initialization
 	void Start () {
+		_orientation = new ReactiveProperty<DeviceOrientation>(Input.deviceOrientation);
+		_orientation.Subscribe((DeviceOrientation o) => {
+			Vector3 camPos = Camera.main.transform.position;
+			Vector2 delta = (_canvas.transform as RectTransform).sizeDelta;
+			int size = 568;
+			switch(o) {
+			case DeviceOrientation.LandscapeLeft:
+			case DeviceOrientation.LandscapeRight:
+				camPos.y = 40;
+				delta.x = 1136;
+				delta.y = 640;
+				size = 320;
+				break;
+			case DeviceOrientation.Portrait:
+			case DeviceOrientation.PortraitUpsideDown:
+				delta.x = 640;
+				delta.y = 1136;
+				size = 568;
+				break;
+			}
+			Camera.main.transform.position = camPos;
+			Camera.main.orthographicSize = size;
+			(_canvas.transform as RectTransform).sizeDelta = delta;
+		});
 		
 		_master = Resources.Load<MasterData> ("Datas/MasterData");
 
@@ -338,10 +462,15 @@ public class GameManager : Utility.Singleton<GameManager> {
 		for(int i = 0; i < _holdItems.Length; ++i)
 			InterfaceManager.Instance.SetHolderItem(i, _holdItems[i]);
 
+		InterfaceManager.Instance.AttachTreasureMethod (TreasureOpen, TreasureDestruction);
+
 		CreateMap (1);
 
 		switch (Check ()) {
 		case CheckResult.PlayerInput:
+			break;
+		case CheckResult.Treasure:
+			InterfaceManager.Instance.SetVisibleTreasure (true);
 			break;
 		case CheckResult.EnemyAction:
 			StartCoroutine (ProgressAction());
@@ -354,6 +483,8 @@ public class GameManager : Utility.Singleton<GameManager> {
 	
 	// Update is called once per frame
 	void Update () {
+		_orientation.Value = Input.deviceOrientation;
+
 		if (_isDragged && !_inExec) {
 			int x = _heroUnit.x;
 			int z = _heroUnit.z;
@@ -376,18 +507,20 @@ public class GameManager : Utility.Singleton<GameManager> {
 			Action (x, z);
 			_isDragged = false;
 		}
-#if !UNITY_EDITOR
-		Vector2 gravity2D = new Vector2(Input.acceleration.x, Input.acceleration.y).normalized;
-		Physics2D.gravity = gravity2D * Physics2D.gravity.magnitude;
-#endif
+		if(!Define.isEditor) {
+//			Vector2 gravity2D = new Vector2(Input.acceleration.x, Input.acceleration.y).normalized;
+//			Physics2D.gravity = gravity2D * Physics2D.gravity.magnitude;
+		}
 	}
 
 	void OnGUI() {
-		#if UNITY_EDITOR
-		GUILayout.Label ("turn "+ _turn + " dragged " + _isDragged);
-		GUILayout.Label (_heroUnit.name + " ap " + _heroUnit.UnitActiveData.BaseStatus.ap);
-		foreach (UnitController monsterUnit in _monsterUnits)
-			GUILayout.Label (monsterUnit.name + " ap "+ monsterUnit.UnitActiveData.BaseStatus.ap);
-		#endif
+		if (Define.isEditor) {
+			GUILayout.Label ("turn " + _turn + " dragged " + _isDragged);
+			GUILayout.Label (_heroUnit.name + " ap " + _heroUnit.UnitActiveData.BaseStatus.ap);
+			foreach (UnitController monsterUnit in _monsterUnits)
+				GUILayout.Label (monsterUnit.name + " ap " + monsterUnit.UnitActiveData.BaseStatus.ap);
+		} else {
+			GUILayout.Label ("" + Input.acceleration);
+		}
 	}
 }

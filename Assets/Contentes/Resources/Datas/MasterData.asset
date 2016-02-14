@@ -29,6 +29,7 @@ MonoBehaviour:
       x: 0
       z: 0
       ap: 0
+    _dropDatas: []
   - _unitName: Wall
     _viewName: WallUnitView
     _status:
@@ -46,6 +47,7 @@ MonoBehaviour:
       x: 0
       z: 0
       ap: 0
+    _dropDatas: []
   - _unitName: Slime
     _viewName: SlimeUnitView
     _status:
@@ -63,6 +65,17 @@ MonoBehaviour:
       x: 0
       z: 0
       ap: 0
+    _dropDatas:
+    - _dropType: 1
+      _popType: 1
+      _itemName: 
+      _value: 0
+      _rate: 3000
+    - _dropType: 1
+      _popType: 4
+      _itemName: 
+      _value: 0
+      _rate: 8000
   - _unitName: Goblin
     _viewName: GoblinUnitView
     _status:
@@ -80,6 +93,27 @@ MonoBehaviour:
       x: 0
       z: 0
       ap: 0
+    _dropDatas:
+    - _dropType: 1
+      _popType: 1
+      _itemName: 
+      _value: 1
+      _rate: 3000
+    - _dropType: 1
+      _popType: 2
+      _itemName: 
+      _value: 1
+      _rate: 3000
+    - _dropType: 1
+      _popType: 4
+      _itemName: 
+      _value: 1
+      _rate: 3000
+    - _dropType: 0
+      _popType: 0
+      _itemName: BronzeHelm
+      _value: 1
+      _rate: 10000
   - _unitName: Treasure
     _viewName: treasureUnitView
     _status:
@@ -97,6 +131,7 @@ MonoBehaviour:
       x: 0
       z: 0
       ap: 0
+    _dropDatas: []
   _chipData:
   - _chipName: Flat
     _viewName: FlatChipView

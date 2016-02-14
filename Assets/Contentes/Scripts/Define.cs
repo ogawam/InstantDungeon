@@ -3,6 +3,13 @@ using System.Collections;
 
 static public class Define {
 
+	static public bool isEditor { 
+		get {
+			return Application.platform == RuntimePlatform.OSXEditor 
+				|| Application.platform == RuntimePlatform.WindowsEditor;
+		}
+	}
+
 	public enum Element {
 		Holy = (1<<0),
 		Fire = (1<<1),
@@ -96,6 +103,19 @@ static public class Define {
 		Def,
 		Agi,
 		Lck
+	};
+
+	public enum DropType {
+		Item,
+		Pop,
+	};
+
+	public enum PopType {
+		None,
+		Heart,	// 体力回復
+		Magic,	// 魔力回復
+		Medic,	// 状態回復
+		Money,	// ゴールド
 	};
 
 	static public readonly float ChipWidth = 80;

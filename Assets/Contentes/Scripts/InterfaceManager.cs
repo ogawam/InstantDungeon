@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.Events;
 using System.Collections;
 using System.Collections.Generic;
 using DG.Tweening;
@@ -26,6 +27,10 @@ public class InterfaceManager : Utility.Singleton<InterfaceManager> {
 	[SerializeField] float _skipRotateSec;
 	[SerializeField] Text _floorText;
 	[SerializeField] HorizontalLayoutGroup _itemGroup;
+	[SerializeField] Image _shader;
+	[SerializeField] CanvasGroup _treasure;
+	[SerializeField] Button _buttonTerasureOpen;
+	[SerializeField] Button _buttonTerasureDestruction;
 
 	[SerializeField] List<EquipInterfaceData> _equipDatas; 
 
@@ -50,6 +55,16 @@ public class InterfaceManager : Utility.Singleton<InterfaceManager> {
 			yield return 0;
 		}
 		_skipButton.transform.localEulerAngles = Vector3.zero;
+	}
+
+	public void AttachTreasureMethod(UnityAction open, UnityAction destruction) {
+		_buttonTerasureOpen.onClick.AddListener (open);
+		_buttonTerasureDestruction.onClick.AddListener (destruction);
+	}
+
+	public void SetVisibleTreasure(bool visible) {
+		_shader.gameObject.SetActive(visible);
+		_treasure.gameObject.SetActive(visible);
 	}
 
 	[SerializeField] float _floorFadeInSec;

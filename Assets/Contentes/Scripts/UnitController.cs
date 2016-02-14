@@ -12,6 +12,11 @@ public class UnitController : MonoBehaviour {
 	public UnitView UnitView { get { return _unitView; } }
 	HudView _hudView = null;
 
+	public PopController dropPop = null;
+	public UnitController dropUnit = null;
+	public UnitController openUnit = null;
+	public ItemMasterData dropItem = null;
+
 	Define.Unit _unitType;
 	public Define.Unit UnitType { get { return _unitType; } }
 	public bool IsRecievable { get { 
@@ -115,11 +120,26 @@ public class UnitController : MonoBehaviour {
 		_unitView.Damage (_unitActiveData.CalcStatus.IsDead);
 	}
 
+	public IEnumerator Open() {
+		yield return StartCoroutine(_unitView.Open (dropItem.ViewSprite));
+	}
+
+	public IEnumerator Destruction() {
+		yield return StartCoroutine(_unitView.Destruction ());
+	}
+
 	CommandResultData _commandResultData = null;
 	public CommandResultData CommandResult { get { return _commandResultData; } }
 		
 	public IEnumerator DoMove(ChipController chipTo) {
 		yield return StartCoroutine(_unitView.DoMove (chipTo.ChipView));
+	}
+
+	public IEnumerator Appear() {
+		UnitView.AppearType type = UnitView.AppearType.Moment;
+		if (UnitType != Define.Unit.Wall)
+			type = UnitView.AppearType.Warp;
+		yield return StartCoroutine(_unitView.Appear (type));
 	}
 
 	// Use this for initialization

@@ -10,7 +10,6 @@
 /Users/ogawam/Projects/InstantDungeon/Temp/bin/Debug/DOTween43.dll
 /Users/ogawam/Projects/InstantDungeon/Temp/bin/Debug/DOTween46.dll
 /Users/ogawam/Projects/InstantDungeon/Temp/bin/Debug/DOTween50.dll
-/Users/ogawam/Projects/InstantDungeon/Temp/bin/Debug/UnityEditor.iOS.Extensions.Xcode.dll
 /Users/ogawam/Projects/InstantDungeon/Temp/bin/Debug/Mono.Cecil.dll
 /Users/ogawam/Projects/InstantDungeon/Temp/bin/Debug/Unity.SerializationLogic.dll
 /Users/ogawam/Projects/InstantDungeon/Temp/bin/Debug/Unity.DataContract.dll

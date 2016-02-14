@@ -13,6 +13,7 @@ public class StageManager : Utility.Singleton<StageManager> {
 	Vector3[,] _positions = new Vector3[Define.StageWidth, Define.StageDepth];
 	ChipController[,] _chips = new ChipController[Define.StageWidth, Define.StageDepth];
 	UnitController[,] _units = new UnitController[Define.StageWidth, Define.StageDepth];
+	List<PopController>[,] _pops = new List<PopController>[Define.StageWidth, Define.StageDepth];
 
 	public UnitController FindUnit(ChipController chip) {
 		if(chip != null)
@@ -32,6 +33,9 @@ public class StageManager : Utility.Singleton<StageManager> {
 					_chips [x, z].Remove();
 				_chips [x, z] = null;
 				_units [x, z] = null;
+				foreach (PopController pop in _pops[x, z])
+					pop.Remove ();
+				_pops [x, z].Clear();
 			}
 		}
 	}
@@ -70,6 +74,22 @@ public class StageManager : Utility.Singleton<StageManager> {
 		_units[x, z] = unit;
 	}
 
+	public void SetPop(PopController pop) {
+		int x = pop.x;
+		int z = pop.z;
+		Vector3 position = _positions [x, z];
+		pop.PopView.transform.SetParent (_mainGround, false);
+		pop.PopView.transform.localPosition = position;
+		for (int i = 0; i < _mainGround.childCount; ++i) {
+			if (position.y > _mainGround.GetChild (i).transform.localPosition.y) {
+				pop.PopView.transform.SetSiblingIndex (i);
+				Debug.Log ("index "+ i);
+				break;
+			}
+		}								
+		_pops[x, z].Add(pop);
+	}
+
 	public ChipController GetChip(int x, int z) {
 		if (x >= 0 && x < Define.StageWidth && 
 			z >= 0 && z < Define.StageDepth)
@@ -91,6 +111,7 @@ public class StageManager : Utility.Singleton<StageManager> {
 
 	List<UnitController> _orderedUnits = new List<UnitController>();
 	public void CalcTo() {
+		bool isSkip = false;
 		_orderedUnits.Clear ();
 		_orderedUnits.AddRange(_unitsTo.Keys.OrderBy (elem => -elem.UnitMasterData.Status.Agi).ToArray());
 		foreach(UnitController unit in _orderedUnits) {
@@ -111,13 +132,20 @@ public class StageManager : Utility.Singleton<StageManager> {
 				case Define.Unit.Treasure:
 					// TODO enable open enemy thief
 					if (unit.UnitType == Define.Unit.Hero) {
-						GameManager.Instance.Open (rideUnit, unit);
+						GameManager.Instance.Open (unit, rideUnit);
+						int removeBegin = _orderedUnits.IndexOf (unit) + 1;
+						int removeCount = _orderedUnits.Count - removeBegin;
+						_orderedUnits.RemoveRange(removeBegin, removeCount);
+						isSkip = true;
 					}
+					else unit.CalcCommandResult (GetChip(x, z), null);
 					break;
 				case Define.Unit.Hero:
 				case Define.Unit.Monster:
-					if (rideUnit.IsRecievable && unit.Side != rideUnit.Side)
-						GameManager.Instance.Action (unit, new List<UnitController>(){ rideUnit });
+					if (rideUnit.IsRecievable && unit.Side != rideUnit.Side) {
+						List<UnitController> receivers = new List<UnitController> (){ rideUnit };
+						GameManager.Instance.Action (unit, receivers);
+					}
 					else unit.CalcCommandResult (GetChip(x, z), null);	// create move action ? 
 					break;
 				}
@@ -126,6 +154,8 @@ public class StageManager : Utility.Singleton<StageManager> {
 				unit.CalcCommandResult (chip, null);	// create move action ? 
 			}
 			_units [x, z] = unit;
+			if (isSkip)
+				break;
 		}
 	}
 
@@ -137,7 +167,8 @@ public class StageManager : Utility.Singleton<StageManager> {
 			CommandResultData commandResult = unit.CommandResult;
 			if (commandResult != null) {
 				if (commandResult.chip != null) {
-					coroutines.Add(StartCoroutine(unit.DoMove (commandResult.chip)));
+					if(unit.x != commandResult.chip.x || unit.z != commandResult.chip.z)
+						coroutines.Add(StartCoroutine(unit.DoMove (commandResult.chip)));
 				} else {
 					// todo Motion 
 					foreach (UnitController receiver in commandResult.recievers.Keys) {
@@ -158,18 +189,15 @@ public class StageManager : Utility.Singleton<StageManager> {
 							}
 
 							if (receiver.UnitActiveData.CalcStatus.IsDead) {
-								StageManager.Instance.RemoveUnit (receiver);
-/*
-								if (Random.value < 0.1f) {
-									UnitController unitController = CreateUnit ("Treasure", Define.Unit.Treasure, Define.Side.Party);
-									unitController.transform.SetParent (_unitRoot.transform);
-									unitController.x = defence.x;
-									unitController.z = defence.z;
-									_objectUnits.Add (unitController);
-									StageManager.Instance.SetUnit (unitController);
+								if (receiver.dropPop != null) {
+									StartCoroutine (receiver.dropPop.Appear ());
+									receiver.dropPop = null;
 								}
-*/								
-//								defence.UnitView.gameObject.SetActive(false);
+								if (receiver.dropUnit != null) {
+									StartCoroutine(receiver.dropUnit.Appear ());
+									receiver.dropUnit = null;
+								}
+								StageManager.Instance.RemoveUnit (receiver);
 							}
 
 							// Effect
@@ -191,10 +219,10 @@ public class StageManager : Utility.Singleton<StageManager> {
 	}
 
 	public void Sort() {
-		List<UnitView> views = new List<UnitView>(_mainGround.GetComponentsInChildren<UnitView> ());
-		views.Sort ((UnitView l, UnitView r) => (int)(r.transform.localPosition.y - l.transform.localPosition.y));
+		List<Transform> views = new List<Transform>(_mainGround.GetComponentsInChildren<Transform> ());
+		views.Sort ((Transform l, Transform r) => (int)(r.localPosition.y - l.localPosition.y));
 		for (int i = 0; i < views.Count; ++i)
-			views [i].transform.SetSiblingIndex (i);
+			views [i].SetSiblingIndex (i);
 	}
 
 	void Awake() {
@@ -205,6 +233,7 @@ public class StageManager : Utility.Singleton<StageManager> {
 		for (int x = 0; x < Define.StageWidth; ++x) {
 			for (int z = 0; z < Define.StageDepth; ++z) {
 				_positions [x, z] = firstPosition + new Vector3 (Define.ChipWidth * x, Define.ChipDepth * z, 0);
+				_pops [x, z] = new List<PopController> ();
 			}
 		}
 	}
