@@ -206,10 +206,6 @@ public class StageManager : Utility.Singleton<StageManager> {
 					}
 				}
 			}
-			if (unit.UnitActiveData.CalcStatus.Agi != prevAgi) {
-				prevAgi = unit.UnitActiveData.CalcStatus.Agi;
-				yield return new WaitForSeconds(0.005f);
-			}
 		}
 		_unitsTo.Clear ();
 		foreach(Coroutine coroutine in coroutines)

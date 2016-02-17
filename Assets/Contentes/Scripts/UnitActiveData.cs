@@ -40,8 +40,13 @@ public class UnitActiveData {
 	}
 
 	public int ActionPointBonus { 
-		get { return CalcStatus.Agi < GameManager.Instance.Master.AgiOnceToTwice ? 5 :
-			CalcStatus.Agi < GameManager.Instance.Master.AgiTwiceAtTime ? 10 : 20; }
+		get { 
+			if (CalcStatus.Agi < GameManager.Instance.Master.AgiOnceToTwice)
+				return Define.defaultActionPoint / 2;
+			else if (CalcStatus.Agi < GameManager.Instance.Master.AgiTwiceAtTime)
+				return Define.defaultActionPoint;
+			return Define.defaultActionPoint * 2; 
+		}
 	}
 
 	public List<ActionResultData> CalcCommandResult(UnitActiveData receiver, CommandData command) {

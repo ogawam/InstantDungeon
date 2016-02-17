@@ -12,6 +12,14 @@ public class UnitController : MonoBehaviour {
 	public UnitView UnitView { get { return _unitView; } }
 	HudView _hudView = null;
 
+	UpperInterfaceView _upperInterfaceView = null;
+	public UpperInterfaceView UpperInterfaceView { 
+		set { 
+			_upperInterfaceView = value; 
+			_upperInterfaceView.CreateHeart (_unitMasterData.Status.Hp);
+		} 
+	}
+
 	public PopController dropPop = null;
 	public UnitController dropUnit = null;
 	public UnitController openUnit = null;
@@ -57,6 +65,7 @@ public class UnitController : MonoBehaviour {
 		_unitView = Instantiate(Resources.Load<UnitView>(viewPath));
 		if (IsRecievable) {
 			_hudView = InterfaceManager.Instance.CreateHudView (_unitActiveData.BaseStatus.Hp);
+			_hudView.SetVisible (false);
 			ResetTurn ();
 		}
 	}
@@ -117,6 +126,8 @@ public class UnitController : MonoBehaviour {
 
 	public void Reaction() {
 		_hudView.SetHeartPoint (_unitActiveData.CalcStatus.Hp);
+		if (_upperInterfaceView != null)
+			_upperInterfaceView.SetHeartPoint (_unitActiveData.CalcStatus.Hp);
 		_unitView.Damage (_unitActiveData.CalcStatus.IsDead);
 	}
 
@@ -158,5 +169,16 @@ public class UnitController : MonoBehaviour {
 		if(_hudView != null) 
 			Destroy (_hudView.gameObject);
 		Destroy (gameObject);
+	}
+
+	public void SetOrder(int order) {
+		if (_hudView != null) {
+			int scale = UnitActiveData.ActionPointBonus - Define.defaultActionPoint;
+			_hudView.SetOrder (order, scale);
+		}
+	}
+
+	public void DisplayStatus() {
+		_hudView.Display (2);
 	}
 }

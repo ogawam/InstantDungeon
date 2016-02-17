@@ -7,6 +7,7 @@ using DG.Tweening;
 public class HudView : MonoBehaviour {
 
 	[SerializeField] Image heartImage;
+	[SerializeField] Text orderText;
 	CanvasGroup _canvasGroup;
 	List<Image> _hearts = new List<Image>();
 
@@ -23,6 +24,25 @@ public class HudView : MonoBehaviour {
 		if (point == 0) {
 			_canvasGroup.DOFade (0, 0.5f);
 		}
+	}
+
+	public void SetVisible(bool isVisible) {
+		_canvasGroup.DOKill ();
+		_canvasGroup.alpha = isVisible ? 1: 0;
+	}
+
+	public void Display(float seconds) {
+		SetVisible (true);
+		_canvasGroup.DOFade (0, 0.5f).SetDelay (seconds);
+	}
+
+	public void SetOrder(int order, int scale) {
+		string text = order.ToString ();
+		if (scale < 0)
+			text += "<size=24px>1/2</size>";
+		else if(scale > 0)
+			text += "<size=24px>x2</size>";
+		orderText.text = text;
 	}
 	
 	// Use this for initialization

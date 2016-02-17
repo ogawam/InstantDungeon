@@ -31,6 +31,8 @@ public class InterfaceManager : Utility.Singleton<InterfaceManager> {
 	[SerializeField] CanvasGroup _treasure;
 	[SerializeField] Button _buttonTerasureOpen;
 	[SerializeField] Button _buttonTerasureDestruction;
+	[SerializeField] UpperInterfaceView _upperInterfaceView;
+	public UpperInterfaceView UpperInterfaceView { get { return _upperInterfaceView; } }
 
 	[SerializeField] List<EquipInterfaceData> _equipDatas; 
 

@@ -227,6 +227,12 @@ public class GameManager : Utility.Singleton<GameManager> {
 		StartCoroutine(InterfaceManager.Instance.Skip ());
 	}
 
+	public void DisplayStatus() {
+		_heroUnit.DisplayStatus ();
+		foreach (UnitController monsterUnit in _monsterUnits)
+			monsterUnit.DisplayStatus ();
+	}
+
 	// todo refactaling
 	public void Action(UnitController sender, List<UnitController> receivers) {
 		Development.LogAction ("-----------------------------");
@@ -373,6 +379,15 @@ public class GameManager : Utility.Singleton<GameManager> {
 			unitController.StartCoroutine (unitController.Appear ());
 			StageManager.Instance.SetUnit(unitController);
 		}
+
+		List<UnitController> orders = new List<UnitController>(_monsterUnits);
+		orders.Add (_heroUnit);
+		orders.Sort ((UnitController l, UnitController r) => 
+			(r.UnitActiveData.CalcStatus.Agi - l.UnitActiveData.CalcStatus.Agi) 
+		);
+		for (int i = 0; i < orders.Count (); ++i) {
+			orders[i].SetOrder(i+1);
+		}
 	}
 
 	static int totalNo = 0;
@@ -456,6 +471,7 @@ public class GameManager : Utility.Singleton<GameManager> {
 		_unitRoot.transform.SetParent (transform);
 
 		_heroUnit = CreateUnit("Hero", Define.Unit.Hero, Define.Side.Party);
+		_heroUnit.UpperInterfaceView = InterfaceManager.Instance.UpperInterfaceView;
 
 		_holdItems [0] = _master.FindItemData ("BronzeHelm");
 		_holdItems [4] = _master.FindItemData ("BronzeArmor");
@@ -514,6 +530,7 @@ public class GameManager : Utility.Singleton<GameManager> {
 	}
 
 	void OnGUI() {
+/*		
 		if (Define.isEditor) {
 			GUILayout.Label ("turn " + _turn + " dragged " + _isDragged);
 			GUILayout.Label (_heroUnit.name + " ap " + _heroUnit.UnitActiveData.BaseStatus.ap);
@@ -522,5 +539,6 @@ public class GameManager : Utility.Singleton<GameManager> {
 		} else {
 			GUILayout.Label ("" + Input.acceleration);
 		}
+*/		
 	}
 }

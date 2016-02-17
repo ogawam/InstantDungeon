@@ -125,4 +125,5 @@ static public class Define {
 
 	static public readonly float DragToMove = 80;
 	static public readonly int ItemHolderMax = 8;
+	static public readonly int defaultActionPoint = 10;
 }
